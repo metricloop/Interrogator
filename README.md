@@ -31,7 +31,7 @@ The `Interrogator` Facade will be installed automatically within the Service Pro
 Do this.
 `php artisan vendor:publish --provider="MetricLoop\Interrogator\InterrogatorServiceProvider"`
 
-It'll publish the `interrogator.php` config file if you need to customize it. More importantly, it will copy the 
+It'll publish the `config/interrogator.php` file. More importantly, it will copy the 
 migrations file into your migrations directory.
 
 ## Database
@@ -42,7 +42,16 @@ Next, you need to run the migrations.
 ## Eloquent Models
 
 Next, add the `GetsInterrogated` trait to whichever Models you want to have Q&A support. This will add the functions and 
-relationships to make it work.
+relationships to make it work. You also need to add each Model to the `config/interrogator.php` file, like so:
+
+```
+'classes' => [
+    'user' => [
+        'name' => 'User',
+        'class' => 'App\User'
+    ],
+],
+```
 
 At some point you'll need to do `composer dump-autoload` to make sure everything sticks.
 
@@ -71,8 +80,9 @@ Now all you have to do is call the `answerQuestion()` on the `User` model and gi
 $user->answerQuestion($question, '1989-09-10');
 ```
 
-The `GetsInterrogated` trait will handle the Create/Update logic. Also note that `$question` in this function call can
-be either the full `Question` object, the `id`, or the `slug` of the question.
+The `GetsInterrogated` trait will determine if you're creating a new Answer, or if you're updating an existing Answer. 
+Also note that `$question` in this function call can be either the full `Question` object, the `id`, or the `slug` of 
+the question.
 
 ### Retrieving Answers
 Now you want to retrieve the Answer and do something with it, yeah? Display it, compare it against something, whatever.
