@@ -68,8 +68,8 @@ First, let's create a `Section` called Overview and a `Group` called Personal. T
 `Question`.
  
 ```
-$section = Interrogator::createSection('Overview', [], 'App\User');
-$group = Interrogator::createGroup('Personal', $section);
+$section  = Interrogator::createSection('Overview', [], 'App\User');
+$group    = Interrogator::createGroup('Personal', $section);
 $question = Interrogator::createQuestion('Date of Birth', 'date_time', $group);
 ```
 
@@ -118,6 +118,10 @@ $results = Interrogator::search('foo', 'App\User');
 $results = Interrogator::search('foo', 'App\User', [1,2,3]);
 $results = Interrogator::search('foo', null, [1,2,3]);
 ```
+The normal `search()` function wraps SQL wildcards (`%`) around the search term and uses the `LIKE` operator. Speaking 
+of wildcards, both `search()` and `searchExact()` accept normal "human" wildcards like `*` and `?`. The asterisk will be
+replaced with `%` (multiple characters) and the question mark will be replaced with `_` (single character) before 
+conducting the Search.
 
 Or you know the Question and you want to find all the Answers that match certain criteria, where `$question` can be the
 model, the `id`, or the unique `slug`:
