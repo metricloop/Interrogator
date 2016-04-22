@@ -1,0 +1,82 @@
+<?php
+
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Support\Facades\Schema;
+
+class InterrogatorTables extends Migration
+{
+    public function up()
+    {
+        Schema::create('question_types', function(Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->timestamps();
+        });
+
+        $question_types = ['Small Text', 'Large Text', 'Numeric', 'Date & Time', 'Multiple Choice', 'File Upload'];
+        foreach($question_types as $question_type) {
+            MetricLoop\Interrogator\QuestionType::create([
+                'name' => $question_type,
+                'slug' => str_slug($question_type, '_'),
+            ]);
+        }
+
+        Schema::create('sections', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->string('class_name')->nullable();
+            $table->text('options')->nullable();
+            $table->softDeletes();
+            $table->timestamps();
+        });
+        Schema::create('groups', function (Blueprint $table)  {
+            $table->increments('id');
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->text('options')->nullable();
+            $table->unsignedInteger('section_id')->index();
+            $table->softDeletes();
+            $table->timestamps();
+
+            $table->foreign('section_id')->references('id')->on('sections');
+        });
+        Schema::create('questions', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->string('slug')->unique();
+            $table->unsignedInteger('question_type_id')->index();
+            $table->text('options')->nullable();
+            $table->text('choices')->nullable();
+            $table->unsignedInteger('group_id')->index();
+            $table->softDeletes();
+            $table->timestamps();
+
+            $table->foreign('question_type_id')->references('id')->on('question_types');
+            $table->foreign('group_id')->references('id')->on('groups');
+        });
+
+        Schema::create('answers', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('question_id')->index();
+            $table->morphs('answerable');
+            $table->text('value');
+            $table->text('options')->nullable();
+            $table->softDeletes();
+            $table->timestamps();
+
+            $table->foreign('question_id')->references('id')->on('questions');
+        });
+    }
+
+    public function down()
+    {
+        Schema::drop('answers');
+        Schema::drop('questions');
+        Schema::drop('groups');
+        Schema::drop('sections');
+        Schema::drop('question_types');
+    }
+}
