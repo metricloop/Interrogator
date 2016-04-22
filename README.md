@@ -139,6 +139,8 @@ $results = Interrogator::searchMultipleChoice('foo', 'App\User');
 $results = Interrogator::searchFileUpload('foo', 'App\User');
 ```
 
+Oh and of course all of these accept the aforementioned wildcard replacement. ;)
+
 # Contributing
 
 # License
