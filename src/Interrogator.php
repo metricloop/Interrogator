@@ -468,7 +468,7 @@ class Interrogator
                 $question = Question::whereSlug($question)->first();
             }
         }
-
+        
         $question->delete();
     }
 

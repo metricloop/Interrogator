@@ -715,6 +715,96 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $this->assertCount(1, $answers);
     }
 
+    /** @test */
+    public function can_delete_and_cascade_sections_groups_and_questions()
+    {
+        $interrogator = new Interrogator();
+        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User');
+        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client');
+        $group = $interrogator->createGroup('Group 1', $section);
+        $group2 = $interrogator->createGroup('Group 2', $section2);
+        $group3 = $interrogator->createGroup('Group 2', $section2);
+        $question = $interrogator->createQuestion('Question 1', 1, $group);
+        $interrogator->createQuestion('Question 2', 2, $group);
+        $interrogator->createQuestion('Question 3', 3, $group);
+        $interrogator->createQuestion('Question 4', 4, $group);
+        $interrogator->createQuestion('Question 5', 5, $group);
+        $interrogator->createQuestion('Question 6', 6, $group);
+        $interrogator->createQuestion('Question 1', 1, $group2);
+        $interrogator->createQuestion('Question 2', 2, $group2);
+        $interrogator->createQuestion('Question 3', 3, $group2);
+        $interrogator->createQuestion('Question 4', 4, $group2);
+        $interrogator->createQuestion('Question 5', 5, $group2);
+        $interrogator->createQuestion('Question 6', 6, $group2);
+        $interrogator->createQuestion('Question 1', 1, $group3);
+        $interrogator->createQuestion('Question 2', 2, $group3);
+        $interrogator->createQuestion('Question 3', 3, $group3);
+        $interrogator->createQuestion('Question 4', 4, $group3);
+        $interrogator->createQuestion('Question 5', 5, $group3);
+        $interrogator->createQuestion('Question 6', 6, $group3);
+
+        $user = User::create([
+            'name' => 'Ulysses User',
+            'email' => 'uuser@metricloop.com',
+        ]);
+        $client = Client::create([
+            'name' => 'Carly Client',
+            'email' => 'cclient@metricloop.com'
+        ]);
+
+        $section = Section::where('class_name', get_class($user))->first();
+        foreach($section->groups as $group) {
+            foreach($group->questions as $question) {
+                $user->answerQuestion($question, 'Test Answer');
+            }
+        }
+        $section = Section::where('class_name', get_class($client))->first();
+        foreach($section->groups as $group) {
+            foreach($group->questions as $question) {
+                $client->answerQuestion($question, 'Test Answer');
+            }
+        }
+
+        $questions = Question::all();
+        $groups = Group::all();
+        $sections = Section::all();
+        $answers = Answer::all();
+        $this->assertCount(18, $questions);
+        $this->assertCount(18, $answers);
+        $this->assertCount(3, $groups);
+        $this->assertCount(2, $sections);
+
+        $interrogator->deleteQuestion($question);
+        $questions = Question::all();
+        $groups = Group::all();
+        $sections = Section::all();
+        $answers = Answer::all();
+        $this->assertCount(17, $questions);
+        $this->assertCount(17, $answers);
+        $this->assertCount(3, $groups);
+        $this->assertCount(2, $sections);
+
+        $interrogator->deleteGroup($group2);
+        $questions = Question::all();
+        $groups = Group::all();
+        $sections = Section::all();
+        $answers = Answer::all();
+        $this->assertCount(11, $questions);
+        $this->assertCount(11, $answers);
+        $this->assertCount(2, $groups);
+        $this->assertCount(2, $sections);
+
+        $interrogator->deleteSection($section);
+        $questions = Question::all();
+        $groups = Group::all();
+        $sections = Section::all();
+        $answers = Answer::all();
+        $this->assertCount(6, $questions);
+        $this->assertCount(6, $answers);
+        $this->assertCount(1, $groups);
+        $this->assertCount(1, $sections);
+    }
+
     /**
      * -------------------------------------------------------
      * Detective Tests (Search & Query)

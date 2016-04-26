@@ -79,6 +79,20 @@ class Group extends Model
     }
 
     /**
+     * Delete Questions before deleting Group itself.
+     *
+     * @return bool|null
+     * @throws \Exception
+     */
+    public function delete()
+    {
+        $this->questions->each(function ($question) {
+            $question->delete();
+        });
+        return parent::delete();
+    }
+
+    /**
      * Updates the Options for the Group.
      *
      * @param $options

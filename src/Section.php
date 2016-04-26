@@ -68,6 +68,20 @@ class Section extends Model
     }
 
     /**
+     * Delete Groups before deleting Section itself.
+     *
+     * @return bool|null
+     * @throws \Exception
+     */
+    public function delete()
+    {
+        $this->groups->each(function ($group) {
+            $group->delete();
+        });
+        return parent::delete();
+    }
+
+    /**
      * Updates the Options for the Section.
      *
      * @param $options

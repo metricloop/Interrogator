@@ -82,6 +82,30 @@ class Question extends Model
     }
 
     /**
+     * Returns the Answers that belong to this Question.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
+    public function answers()
+    {
+        return $this->hasMany(Answer::class);
+    }
+
+    /**
+     * Delete Answers before deleting Question itself.
+     *
+     * @return bool|null
+     * @throws \Exception
+     */
+    public function delete()
+    {
+        $this->answers->each(function ($answer) {
+            $answer->delete();
+        });
+        return parent::delete();
+    }
+
+    /**
      * Accessor for attribute.
      *
      * @return bool
