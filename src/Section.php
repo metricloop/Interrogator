@@ -26,6 +26,7 @@ class Section extends Model
         'slug',
         'class_name',
         'options',
+        'team_id',
     ];
 
     /**

@@ -24,7 +24,9 @@ trait GetsInterrogated
      */
     public function sections()
     {
-        return Section::where('class_name', get_class($this))->get();
+        return Section::where('class_name', get_class($this))
+            ->where('team_id', $this->current_team_id)
+            ->get();
     }
 
     /**
@@ -54,7 +56,10 @@ trait GetsInterrogated
         }
 
         if($question->group->section->class_name === get_class($this)) {
-            return $this->answers()->where('question_id', $question->id)->first();
+            return $this->answers()
+                ->where('question_id', $question->id)
+                ->where('team_id', $this->current_team_id)
+                ->first();
         }
 
         return null;
@@ -70,7 +75,15 @@ trait GetsInterrogated
      */
     public function answerQuestion($question, $value)
     {
+        if(!$question instanceof Question) {
+            if(is_numeric($question)) {
+                $question = Question::findOrFail($question);
+            } else {
+                $question = Question::whereSlug($question)->first();
+            }
+        }
         $answer = $this->getAnswerFromQuestion($question);
+
         if(!$answer) {
             $answer = $this->createNewAnswer($question, $value);
         } else {
@@ -94,6 +107,7 @@ trait GetsInterrogated
         return $this->answers()->create([
             'question_id' => $question->id,
             'value' => $value,
+            'team_id' => $this->current_team_id
         ]);
     }
 

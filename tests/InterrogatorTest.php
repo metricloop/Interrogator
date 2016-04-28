@@ -26,6 +26,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
             $table->increments('id');
             $table->string('name');
             $table->string('email')->unique();
+            $table->unsignedInteger('current_team_id')->nullable();
             $table->timestamps();
         });
 
@@ -33,6 +34,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
             $table->increments('id');
             $table->string('name');
             $table->string('email')->unique();
+            $table->unsignedInteger('current_team_id')->nullable();
             $table->timestamps();
         });
 
@@ -57,6 +59,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
             $table->string('slug')->unique();
             $table->string('class_name')->nullable();
             $table->text('options')->nullable();
+            $table->unsignedInteger('team_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
@@ -66,6 +69,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
             $table->string('slug')->unique();
             $table->text('options')->nullable();
             $table->unsignedInteger('section_id')->index();
+            $table->unsignedInteger('team_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
@@ -79,6 +83,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
             $table->text('options')->nullable();
             $table->text('choices')->nullable();
             $table->unsignedInteger('group_id')->index();
+            $table->unsignedInteger('team_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
@@ -92,6 +97,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
             $table->morphs('answerable');
             $table->text('value');
             $table->text('options')->nullable();
+            $table->unsignedInteger('team_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
@@ -118,15 +124,15 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
     }
     public function createTestQuestion($interrogator, $offset = 1)
     {
-        return $interrogator->createQuestion('Question ' . $offset, 1, $this->createTestGroup($interrogator, $offset), ['option_1' => 'Option 1']);
+        return $interrogator->createQuestion('Question ' . $offset, 1, $this->createTestGroup($interrogator, $offset), ['option_1' => 'Option 1'], 1);
     }
     public function createTestGroup($interrogator, $offset = 1)
     {
-        return $interrogator->createGroup('Group ' . $offset, $this->createTestSection($interrogator, $offset), ['option_1' => 'Option 1']);
+        return $interrogator->createGroup('Group ' . $offset, $this->createTestSection($interrogator, $offset), ['option_1' => 'Option 1'], 1);
     }
     public function createTestSection($interrogator, $offset = 1)
     {
-        return $interrogator->createSection('Section ' . $offset, ['option_1' => 'Option 1'], 'MetricLoop\Interrogator\User');
+        return $interrogator->createSection('Section ' . $offset, ['option_1' => 'Option 1'], 'MetricLoop\Interrogator\User', 1);
     }
 
     /*
@@ -223,7 +229,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
     {
         $interrogator = new Interrogator();
         $section = $this->createTestSection($interrogator);
-        $group = $interrogator->createGroup('Group 1', $section, ['option_1' => 'Option 1']);
+        $group = $interrogator->createGroup('Group 1', $section, ['option_1' => 'Option 1'], 1);
 
         $this->assertEquals('Group 1', $group->name);
         $this->assertEquals(['option_1' => 'Option 1'], $group->options);
@@ -235,7 +241,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
     {
         $interrogator = new Interrogator();
         $group = $this->createTestGroup($interrogator);
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\User');
+        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\User', 1);
 
         $group = $interrogator->updateGroup($group, 'Group 2', $section2, ['option_1' => 'Option 2']);
         $this->assertEquals('Group 2', $group->name);
@@ -820,6 +826,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $user = User::create([
             'name' => 'Ulysses User',
             'email' => 'uuser@metricloop.com',
+            'current_team_id' => 1
         ]);
 
         $section = Section::where('class_name', get_class($user))->first();
@@ -831,7 +838,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         }
 
         $term = 'Test Answer';
-        $results = $interrogator->searchExact($term);
+        $results = $interrogator->searchExact($term, null, null, 1);
         $this->assertCount(1, $results);
     }
 
@@ -844,6 +851,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $user = User::create([
             'name' => 'Ulysses User',
             'email' => 'uuser@metricloop.com',
+            'current_team_id' => 1,
         ]);
 
         $section = Section::where('class_name', get_class($user))->first();
@@ -855,7 +863,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         }
 
         $term = 'est Answe';
-        $results = $interrogator->search($term);
+        $results = $interrogator->search($term, null, null, 1);
         $this->assertCount(1, $results);
     }
 
@@ -868,6 +876,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $user = User::create([
             'name' => 'Ulysses User',
             'email' => 'uuser@metricloop.com',
+            'current_team_id' => 1,
         ]);
 
         $section = Section::where('class_name', get_class($user))->first();
@@ -879,7 +888,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         }
 
         $term = 'Test ?nswer';
-        $results = $interrogator->search($term);
+        $results = $interrogator->search($term, null, null, 1);
         $this->assertCount(1, $results);
     }
 
@@ -892,6 +901,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $user = User::create([
             'name' => 'Ulysses User',
             'email' => 'uuser@metricloop.com',
+            'current_team_id' => 1,
         ]);
 
         $section = Section::where('class_name', get_class($user))->first();
@@ -903,7 +913,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         }
 
         $term = 'Test *swer';
-        $results = $interrogator->search($term);
+        $results = $interrogator->search($term, null, null, 1);
         $this->assertCount(1, $results);
     }
 
@@ -1275,30 +1285,32 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
     public function can_search_for_specific_question_fuzzy_match()
     {
         $interrogator = new Interrogator();
-        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User');
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client');
-        $group = $interrogator->createGroup('Group 1', $section);
-        $group2 = $interrogator->createGroup('Group 2', $section2);
-        $interrogator->createQuestion('Question 1', 1, $group);
-        $interrogator->createQuestion('Question 2', 2, $group);
-        $interrogator->createQuestion('Question 3', 3, $group);
-        $interrogator->createQuestion('Question 4', 4, $group);
-        $interrogator->createQuestion('Question 5', 5, $group);
-        $interrogator->createQuestion('Question 6', 6, $group);
-        $interrogator->createQuestion('Question 1', 1, $group2);
-        $interrogator->createQuestion('Question 2', 2, $group2);
-        $interrogator->createQuestion('Question 3', 3, $group2);
-        $interrogator->createQuestion('Question 4', 4, $group2);
-        $interrogator->createQuestion('Question 5', 5, $group2);
-        $interrogator->createQuestion('Question 6', 6, $group2);
+        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User', 1);
+        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client', 1);
+        $group = $interrogator->createGroup('Group 1', $section, [], 1);
+        $group2 = $interrogator->createGroup('Group 2', $section2, [], 1);
+        $interrogator->createQuestion('Question 1', 1, $group, [], [], 1);
+        $interrogator->createQuestion('Question 2', 2, $group, [], [], 1);
+        $interrogator->createQuestion('Question 3', 3, $group, [], [], 1);
+        $interrogator->createQuestion('Question 4', 4, $group, [], [], 1);
+        $interrogator->createQuestion('Question 5', 5, $group, [], [], 1);
+        $interrogator->createQuestion('Question 6', 6, $group, [], [], 1);
+        $interrogator->createQuestion('Question 1', 1, $group2, [], [], 1);
+        $interrogator->createQuestion('Question 2', 2, $group2, [], [], 1);
+        $interrogator->createQuestion('Question 3', 3, $group2, [], [], 1);
+        $interrogator->createQuestion('Question 4', 4, $group2, [], [], 1);
+        $interrogator->createQuestion('Question 5', 5, $group2, [], [], 1);
+        $interrogator->createQuestion('Question 6', 6, $group2, [], [], 1);
 
         $user = User::create([
             'name' => 'Ulysses User',
             'email' => 'uuser@metricloop.com',
+            'current_team_id' => 1,
         ]);
         $client = Client::create([
             'name' => 'Carly Client',
-            'email' => 'cclient@metricloop.com'
+            'email' => 'cclient@metricloop.com',
+            'current_team_id' => 1,
         ]);
 
         $section = Section::where('class_name', get_class($user))->first();
@@ -1316,7 +1328,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
 
         $term = 'est Answe';
         $question = Question::first();
-        $results = $interrogator->searchQuestion($term, get_class($user), $question);
+        $results = $interrogator->searchQuestion($term, get_class($user), $question, 1);
         $this->assertCount(1, $results);
     }
     

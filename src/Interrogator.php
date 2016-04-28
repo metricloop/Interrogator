@@ -10,14 +10,16 @@ class Interrogator
      * @param $name
      * @param array $options
      * @param string $class
+     * @param null $team_id
      * @return mixed
      */
-    public function createSection($name, $options = [], $class)
+    public function createSection($name, $options = [], $class, $team_id = null)
     {
         $section = Section::create([
             'name' => $name,
             'slug' => str_slug($name . '_' . str_random(6), '_'),
             'class_name' => $class,
+            'team_id' => $team_id,
         ]);
 
         $section = $section->updateOptions($options);
@@ -122,9 +124,10 @@ class Interrogator
      * @param $name
      * @param $section
      * @param array $options
+     * @param null $team_id
      * @return mixed
      */
-    public function createGroup($name, $section, $options = [])
+    public function createGroup($name, $section, $options = [], $team_id = null)
     {
         if(!$section instanceof Section) {
             if(is_numeric($section)) {
@@ -138,6 +141,7 @@ class Interrogator
             'name' => $name,
             'slug' => str_slug($name . '_' . str_random(6), '_'),
             'section_id' => $section->id,
+            'team_id' => $team_id
         ]);
 
         $group = $group->updateOptions($options);
@@ -233,7 +237,7 @@ class Interrogator
      * @param array $choices
      * @return mixed
      */
-    public function createQuestion($name, $question_type, $group, $options = [], $choices = [])
+    public function createQuestion($name, $question_type, $group, $options = [], $choices = [], $team_id = null)
     {
         if(!$group instanceof Group) {
             if(is_numeric($group)) {
@@ -256,6 +260,7 @@ class Interrogator
             'slug' => str_slug($name . '_' . str_random(6), '_'),
             'question_type_id' => $question_type->id,
             'group_id' => $group->id,
+            'team_id' => $team_id,
         ]);
 
         $question = $question->updateOptions($options);
@@ -477,11 +482,13 @@ class Interrogator
      *
      * @param $term
      * @param null $class_name
+     * @param null $question_ids
      * @return mixed
      */
-    public function searchExact($term, $class_name = null, $question_ids)
+    public function searchExact($term, $class_name = null, $question_ids = null, $team_id = null)
     {
-        $query = Answer::where('value', $term);
+        $query = Answer::where('value', $term)
+            ->where('team_id', $team_id);
         if($class_name) {
             $query = $query->where('answerable_type', $class_name);
         }
@@ -497,13 +504,15 @@ class Interrogator
      * @param $term
      * @param null $class_name
      * @param array $question_ids
+     * @param null $team_id
      * @return mixed
      */
-    public function search($term, $class_name = null, $question_ids = [])
+    public function search($term, $class_name = null, $question_ids = [], $team_id = null)
     {
         $term = '%' . $term . '%';
 
-        $query = Answer::where('value', 'LIKE', $this->wildcardReplace($term));
+        $query = Answer::where('value', 'LIKE', $this->wildcardReplace($term))
+            ->where('team_id', $team_id);
         if($class_name) {
             $query = $query->where('answerable_type', $class_name);
         }
@@ -530,9 +539,10 @@ class Interrogator
      * @param $term
      * @param null $class_name
      * @param $question
+     * @param null $team_id
      * @return mixed
      */
-    public function searchQuestion($term, $class_name = null, $question)
+    public function searchQuestion($term, $class_name = null, $question, $team_id = null)
     {
         if(!$question instanceof Question) {
             if(is_numeric($question)) {
@@ -542,21 +552,22 @@ class Interrogator
             }
         }
 
-        return $this->search($term, $class_name, [$question->id]);
+        return $this->search($term, $class_name, [$question->id], $team_id);
     }
 
     /**
      * Scopes the search based on Question Type.
-     * 
+     *
      * @param $term
      * @param null $class_name
+     * @param null $team_id
      * @return mixed
      */
-    public function searchSmallText($term, $class_name = null)
+    public function searchSmallText($term, $class_name = null, $team_id = null)
     {
         $question_type = QuestionType::where('slug', 'small_text')->first();
         $questions = Question::where('question_type_id', $question_type->id)->pluck('id')->toArray();
-        return $this->search($term, $class_name, $questions);
+        return $this->search($term, $class_name, $questions, $team_id);
     }
 
     /**
@@ -564,13 +575,14 @@ class Interrogator
      *
      * @param $term
      * @param null $class_name
+     * @param null $team_id
      * @return mixed
      */
-    public function searchLargeText($term, $class_name = null)
+    public function searchLargeText($term, $class_name = null, $team_id = null)
     {
         $question_type = QuestionType::where('slug', 'large_text')->first();
         $questions = Question::where('question_type_id', $question_type->id)->pluck('id')->toArray();
-        return $this->search($term, $class_name, $questions);
+        return $this->search($term, $class_name, $questions, $team_id);
     }
 
     /**
@@ -578,13 +590,14 @@ class Interrogator
      *
      * @param $term
      * @param null $class_name
+     * @param null $team_id
      * @return mixed
      */
-    public function searchNumeric($term, $class_name = null)
+    public function searchNumeric($term, $class_name = null, $team_id = null)
     {
         $question_type = QuestionType::where('slug', 'numeric')->first();
         $questions = Question::where('question_type_id', $question_type->id)->pluck('id')->toArray();
-        return $this->search($term, $class_name, $questions);
+        return $this->search($term, $class_name, $questions, $team_id);
     }
 
     /**
@@ -592,13 +605,14 @@ class Interrogator
      *
      * @param $term
      * @param null $class_name
+     * @param null $team_id
      * @return mixed
      */
-    public function searchDateTime($term, $class_name = null)
+    public function searchDateTime($term, $class_name = null, $team_id = null)
     {
         $question_type = QuestionType::where('slug', 'date_time')->first();
         $questions = Question::where('question_type_id', $question_type->id)->pluck('id')->toArray();
-        return $this->search($term, $class_name, $questions);
+        return $this->search($term, $class_name, $questions, $team_id);
     }
 
     /**
@@ -606,13 +620,14 @@ class Interrogator
      *
      * @param $term
      * @param null $class_name
+     * @param null $team_id
      * @return mixed
      */
-    public function searchMultipleChoice($term, $class_name = null)
+    public function searchMultipleChoice($term, $class_name = null, $team_id = null)
     {
         $question_type = QuestionType::where('slug', 'multiple_choice')->first();
         $questions = Question::where('question_type_id', $question_type->id)->pluck('id')->toArray();
-        return $this->search($term, $class_name, $questions);
+        return $this->search($term, $class_name, $questions, $team_id);
     }
 
     /**
@@ -620,35 +635,42 @@ class Interrogator
      *
      * @param $term
      * @param null $class_name
+     * @param null $team_id
      * @return mixed
      */
-    public function searchFileUpload($term, $class_name = null)
+    public function searchFileUpload($term, $class_name = null, $team_id = null)
     {
         $question_type = QuestionType::where('slug', 'file_upload')->first();
         $questions = Question::where('question_type_id', $question_type->id)->pluck('id')->toArray();
-        return $this->search($term, $class_name, $questions);
+        return $this->search($term, $class_name, $questions, $team_id);
     }
 
     /**
      * Return list of all Sections.
      *
      * @param null $class
+     * @param null $team_id
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function getSections($class = null)
+    public function getSections($class = null, $team_id = null)
     {
         if($class) {
-            return Section::where('class_name', $class)->get();
+            return Section::where('class_name', $class)
+                ->where('team_id', $team_id)
+                ->get();
         }
-        return Section::all();
+        return Section::where('team_id', $team_id)
+            ->get();
     }
 
     /**
      * Return list of all Groups.
      *
+     * @param null $section
+     * @param null $team_id
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function getGroups($section = null)
+    public function getGroups($section = null, $team_id = null)
     {
         if($section) {
             if(!$section instanceof Section) {
@@ -659,9 +681,12 @@ class Interrogator
                 }
             }
 
-            return Group::where('section_id', $section->id)->get();
+            return Group::where('section_id', $section->id)
+                ->where('team_id', $team_id)
+                ->get();
         }
-        return Group::all();
+        return Group::where('team_id', $team_id)
+            ->get();
     }
 
     /**
@@ -671,7 +696,7 @@ class Interrogator
      * @param null $group
      * @return \Illuminate\Database\Eloquent\Collection|static[]
      */
-    public function getQuestions($question_type = null, $group = null)
+    public function getQuestions($question_type = null, $group = null, $team_id = null)
     {
         if($question_type && $group) {
             if(!$question_type instanceof QuestionType) {
@@ -690,6 +715,7 @@ class Interrogator
             }
             return Question::where('question_type_id', $question_type->id)
                 ->where('group_id', $group->id)
+                ->where('team_id', $team_id)
                 ->get();
         }
         if($question_type) {
@@ -701,7 +727,9 @@ class Interrogator
                 }
             }
 
-            return Question::where('question_type_id', $question_type->id)->get();
+            return Question::where('question_type_id', $question_type->id)
+                ->where('team_id', $team_id)
+                ->get();
         }
         if($group) {
             if(!$group instanceof Group) {
@@ -712,9 +740,33 @@ class Interrogator
                 }
             }
 
-            return Question::where('group_id', $group->id)->get();
+            return Question::where('group_id', $group->id)
+                ->where('team_id', $team_id)
+                ->get();
         }
         
-        return Question::all();
+        return Question::where('team_id', $team_id)->get();
+    }
+
+    /**
+     * Returns a single Question.
+     *
+     * @param null $question
+     * @return null
+     */
+    public function getQuestion($question = null)
+    {
+        if(is_null($question)) {
+            return false;
+        }
+        if(!$question instanceof Question) {
+            if(is_numeric($question)) {
+                $question = Question::findOrFail($question);
+            } else {
+                $question = Question::whereSlug($question)->first();
+            }
+        }
+
+        return $question;
     }
 }

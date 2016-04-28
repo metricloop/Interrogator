@@ -28,6 +28,7 @@ class Question extends Model
         'options',
         'choices',
         'group_id',
+        'team_id',
     ];
 
     /**

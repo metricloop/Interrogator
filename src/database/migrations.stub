@@ -29,6 +29,7 @@ class InterrogatorTables extends Migration
             $table->string('slug')->unique();
             $table->string('class_name')->nullable();
             $table->text('options')->nullable();
+            $table->unsignedInteger('team_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
         });
@@ -38,6 +39,7 @@ class InterrogatorTables extends Migration
             $table->string('slug')->unique();
             $table->text('options')->nullable();
             $table->unsignedInteger('section_id')->index();
+            $table->unsignedInteger('team_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
@@ -51,6 +53,7 @@ class InterrogatorTables extends Migration
             $table->text('options')->nullable();
             $table->text('choices')->nullable();
             $table->unsignedInteger('group_id')->index();
+            $table->unsignedInteger('team_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
 
@@ -64,6 +67,7 @@ class InterrogatorTables extends Migration
             $table->morphs('answerable');
             $table->text('value');
             $table->text('options')->nullable();
+            $table->unsignedInteger('team_id')->nullable();
             $table->softDeletes();
             $table->timestamps();
 

@@ -26,7 +26,8 @@ class Group extends Model
         'name',
         'slug',
         'options',
-        'section_id'
+        'section_id',
+        'team_id',
     ];
 
     /**
