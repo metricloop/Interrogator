@@ -749,6 +749,50 @@ class Interrogator
     }
 
     /**
+     * Returns a single Section.
+     *
+     * @param null $section
+     * @return bool|null
+     */
+    public function getSection($section = null)
+    {
+        if(is_null($section)) {
+            return false;
+        }
+        if(!$section instanceof Section) {
+            if(is_numeric($section)) {
+                $section = Section::findOrFail($section);
+            } else {
+                $section = Section::whereSlug($section)->first();
+            }
+        }
+
+        return $section;
+    }
+
+    /**
+     * Returns a single Section.
+     *
+     * @param null $group
+     * @return bool|null
+     */
+    public function getGroup($group = null)
+    {
+        if(is_null($group)) {
+            return false;
+        }
+        if(!$group instanceof Group) {
+            if(is_numeric($group)) {
+                $group = Group::findOrFail($group);
+            } else {
+                $group = Group::whereSlug($group)->first();
+            }
+        }
+
+        return $group;
+    }
+
+    /**
      * Returns a single Question.
      *
      * @param null $question
