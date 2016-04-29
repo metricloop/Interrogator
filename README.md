@@ -147,7 +147,7 @@ Oh and of course all of these accept the aforementioned wildcard replacement. ;)
 # Contributing
 
 Thanks for wanting to contribute! We take this package seriously and want to maintain its integrity. We will look at all
-submissions and PRs but will have the last say in what gets merged or not. 
+suggestions and PRs but will ultimately have the last say in what gets merged or not. 
 
 # License
 
