@@ -10,9 +10,12 @@ Add this to your composer.json:
 
 ```
 "require": {
-    "metricloop/interrogator": "*@dev",
+    "metricloop/interrogator": "0.1.*",
 },
 ```
+
+Note: Since this is a pre-1.0 release, I would leave it as `0.1.*` because the package is young and might go in different
+directions with unforeseen BCs.
 
 And run `composer update` or `composer install`. Or do `composer require metricloop/interrogator`. 
 
@@ -142,6 +145,9 @@ $results = Interrogator::searchFileUpload('foo', 'App\User');
 Oh and of course all of these accept the aforementioned wildcard replacement. ;)
 
 # Contributing
+
+Thanks for wanting to contribute! We take this package seriously and want to maintain its integrity. We will look at all
+submissions and PRs but will have the last say in what gets merged or not. 
 
 # License
 
