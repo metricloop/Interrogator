@@ -144,6 +144,14 @@ $results = Interrogator::searchFileUpload('foo', 'App\User');
 
 Oh and of course all of these accept the aforementioned wildcard replacement. ;)
 
+### Multi Tenancy
+You *might* need multi-tenancy, or you might not. Right now, this supports multi-tenancy with Laravel Spark by adding
+`team_id` to every model. You'll need to add the `team_id` to your requests (usually the last parameter) so that 
+Interrogator can scope accordingly. Otherwise, `team_id` will stay `null` and your query scope will be 
+`->where('team_id', null)`. 
+
+Please feel free to contribute and expand our single- and multi-tenant ability!
+
 # Contributing
 
 Thanks for wanting to contribute! We take this package seriously and want to maintain its integrity. We will look at all
