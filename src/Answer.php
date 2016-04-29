@@ -3,9 +3,12 @@
 namespace MetricLoop\Interrogator;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Answer extends Model
 {
+    use SoftDeletes;
+
     /**
      * The database table used by the model.
      *
@@ -26,6 +29,16 @@ class Answer extends Model
         'options',
         'team_id',
     ];
+
+    /**
+     * The attributes that should be cast to native types.
+     *
+     * @var array
+     */
+    protected $casts = [
+        'deleted_at',
+    ];
+
     /**
      * Get all of the owning answerable models.
      *
