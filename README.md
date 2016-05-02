@@ -3,6 +3,10 @@
 # Interrogator
 
 [![Build Status](https://travis-ci.org/MetricLoop/Interrogator.svg)](https://travis-ci.org/MetricLoop/Interrogator)
+[![Total Downloads](https://poser.pugx.org/MetricLoop/Interrogator/d/total.svg)](https://packagist.org/packages/laravel/framework)
+[![Latest Stable Version](https://poser.pugx.org/MetricLoop/Interrogator/v/stable.svg)](https://packagist.org/packages/laravel/framework)
+[![Latest Unstable Version](https://poser.pugx.org/MetricLoop/Interrogator/v/unstable.svg)](https://packagist.org/packages/laravel/framework)
+[![License](https://poser.pugx.org/MetricLoop/Interrogator/license.svg)](https://packagist.org/packages/laravel/framework)
 
 A simple way to associate Questions and Answers to Eloquent models using Laravel 5.2+
 
