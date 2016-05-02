@@ -2,6 +2,8 @@
 
 # Interrogator
 
+[![Build Status](https://travis-ci.org/metricloop/interrogator.svg)](https://travis-ci.org/metricloop/interrogator)
+
 A simple way to associate Questions and Answers to Eloquent models using Laravel 5.2+
 
 # Installation
