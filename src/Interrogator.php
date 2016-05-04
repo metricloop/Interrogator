@@ -65,7 +65,7 @@ class Interrogator
         $attributes = [];
         if(isset($name)) {
             $attributes['name'] = $name;
-            $attributes['slug'] = str_slug($name, '_') . '_' . time();
+            $attributes['slug'] = str_slug($name . '_' . str_random(6), '_');
         }
         if(isset($class)) {
             $attributes['class_name'] = $class;
@@ -195,7 +195,7 @@ class Interrogator
         $attributes = [];
         if(isset($name)) {
             $attributes['name'] = $name;
-            $attributes['slug'] = str_slug($name, '_') . '_' . time();
+            $attributes['slug'] = str_slug($name . '_' . str_random(6), '_');
         }
         if($section) {
             $attributes['section_id'] = $section->id;
@@ -298,7 +298,7 @@ class Interrogator
         $attributes = [];
         if(isset($name)) {
             $attributes['name'] = $name;
-            $attributes['slug'] = str_slug($name, '_') . '_' . time();
+            $attributes['slug'] = str_slug($name . '_' . str_random(6), '_');
         }
         if($group) {
             $attributes['group_id'] = $group->id;
