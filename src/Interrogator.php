@@ -657,22 +657,27 @@ class Interrogator
             return Question::where('question_type_id', $question_type->id)
                 ->where('group_id', $group->id)
                 ->where('team_id', $team_id)
+                ->with('type')
                 ->get();
         }
         if($question_type) {
             $question_type = $this->resolveQuestionType($question_type);
             return Question::where('question_type_id', $question_type->id)
                 ->where('team_id', $team_id)
+                ->with('type')
                 ->get();
         }
         if($group) {
             $group = $this->resolveGroup($group);
             return Question::where('group_id', $group->id)
                 ->where('team_id', $team_id)
+                ->with('type')
                 ->get();
         }
         
-        return Question::where('team_id', $team_id)->get();
+        return Question::where('team_id', $team_id)
+            ->with('type')
+            ->get();
     }
 
     /**
@@ -766,9 +771,9 @@ class Interrogator
     {
         if(!$question instanceof Question) {
             if(is_numeric($question)) {
-                $question = Question::findOrFail($question);
+                $question = Question::with('type')->findOrFail($question);
             } else {
-                $question = Question::whereSlug($question)->first();
+                $question = Question::whereSlug($question)->with('type')->first();
             }
         }
         return $question;
