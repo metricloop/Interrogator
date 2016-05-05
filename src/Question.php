@@ -111,24 +111,58 @@ class Question extends Model
      *
      * @return bool
      */
-    public function allowMultipleChoiceOther()
+    public function allowsMultipleChoiceOther()
     {
-        return isset($this->options['allow_multiple_choice_other']) ? true : false;
+        return isset($this->options['allows_multiple_choice_other']) ? true : false;
     }
 
     /**
-     * Updates the Options for the Question.
+     * Set an Option (brand new or updating existing).
+     *
+     * @param $key
+     * @param $value
+     * @return $this
+     */
+    public function setOption($key, $value)
+    {
+        $options = $this->options;
+        $options[$key] = $value;
+        $this->options = $options;
+        $this->save();
+        return $this;
+    }
+
+    /**
+     * Unset an Option.
+     *
+     * @param $key
+     * @return $this
+     */
+    public function unsetOption($key)
+    {
+        $options = $this->options;
+        unset($options[$key]);
+        $this->options = $options;
+        $this->save();
+        return $this;
+    }
+
+    /**
+     * Sync list of Options.
      *
      * @param $options
      * @return $this
      */
-    public function updateOptions($options = [])
+    public function syncOptions($options)
     {
-        if(!is_array($options)) {
-            $options = [$options];
+        $currentOptions = is_array($this->options) ? $this->options : [];
+        $optionsToRemove = array_diff_key($currentOptions, $options);
+        foreach($options as $key => $value) {
+            $this->setOption($key, $value);
         }
-        $this->options = $options;
-        $this->save();
+        foreach($optionsToRemove as $key => $value) {
+            $this->unsetOption($key);
+        }
 
         return $this;
     }
@@ -155,11 +189,9 @@ class Question extends Model
      *
      * @return $this
      */
-    public function addMultipleChoiceOtherOption()
+    public function setAllowsMultipleChoiceOtherOption()
     {
-        $this->options = array_merge(is_null($this->options) ? [] : $this->options, ['allow_multiple_choice_other' => true]);
-        $this->save();
-
+        $this->setOption('allows_multiple_choice_other', true);
         return $this;
     }
 }

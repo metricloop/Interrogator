@@ -417,17 +417,17 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $question = $interrogator->createMultipleChoiceQuestion('Question 1', $group, $choices);
         $this->assertEquals('Question 1', $question->name);
         $this->assertEquals(['option_1' => 'Option 1', 'option_2' => 'Option 2'], $question->choices);
-        $this->assertFalse($question->allowMultipleChoiceOther());
+        $this->assertFalse($question->allowsMultipleChoiceOther());
 
         $question = $interrogator->createMultipleChoiceQuestion('Question 2', $group->id, $choices);
         $this->assertEquals('Question 2', $question->name);
         $this->assertEquals(['option_1' => 'Option 1', 'option_2' => 'Option 2'], $question->choices);
-        $this->assertFalse($question->allowMultipleChoiceOther());
+        $this->assertFalse($question->allowsMultipleChoiceOther());
 
         $question = $interrogator->createMultipleChoiceQuestion('Question 3', $group->slug, $choices);
         $this->assertEquals('Question 3', $question->name);
         $this->assertEquals(['option_1' => 'Option 1', 'option_2' => 'Option 2'], $question->choices);
-        $this->assertFalse($question->allowMultipleChoiceOther());
+        $this->assertFalse($question->allowsMultipleChoiceOther());
     }
 
     /** @test */
@@ -439,7 +439,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $question = $interrogator->createMultipleChoiceQuestion('Question 1', $group, $choices, true);
         $this->assertEquals('Question 1', $question->name);
         $this->assertContains('Option 1', $question->choices);
-        $this->assertTrue($question->allowMultipleChoiceOther());
+        $this->assertTrue($question->allowsMultipleChoiceOther());
     }
 
     /** @test */
@@ -478,9 +478,9 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $group = $this->createTestGroup($interrogator);
         $choices = ['Option 1','Option 2'];
         $question = $interrogator->createMultipleChoiceQuestion('Question 1', $group, $choices);
-        $this->assertFalse($question->allowMultipleChoiceOther());
-        $question = $question->addMultipleChoiceOtherOption();
-        $this->assertTrue($question->allowMultipleChoiceOther());
+        $this->assertFalse($question->allowsMultipleChoiceOther());
+        $question = $question->setAllowsMultipleChoiceOtherOption();
+        $this->assertTrue($question->allowsMultipleChoiceOther());
     }
 
     /** @test */
@@ -811,525 +811,64 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $this->assertCount(1, $sections);
     }
 
-    /**
-     * -------------------------------------------------------
-     * Detective Tests (Search & Query)
-     * -------------------------------------------------------
-     */
-
-    /** @test */
-    public function can_search_for_exact_match()
+    public function test_can_update_a_single_option_on_section()
     {
         $interrogator = new Interrogator();
-        $this->createTestQuestion($interrogator);
+        $section = $this->createTestSection($interrogator);
+        $section = $interrogator->updateSection($section, null, ['option_1' => 'Option 1', 'option_2' => 'Option 2']);
 
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-            'current_team_id' => 1
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'Test Answer';
-        $results = $interrogator->searchExact($term, null, null, 1);
-        $this->assertCount(1, $results);
+        $section = $interrogator->setOptionOnSection($section, 'option_1', 'Option 2');
+        $this->assertEquals(['option_1' => 'Option 2', 'option_2' => 'Option 2'], $section->options);
     }
 
-    /** @test */
-    public function can_search_for_fuzzy_match()
+    public function test_can_update_a_single_option_on_group()
     {
         $interrogator = new Interrogator();
-        $this->createTestQuestion($interrogator);
+        $group = $this->createTestGroup($interrogator);
+        $group = $interrogator->updateGroup($group, null, null, ['option_1' => 'Option 1', 'option_2' => 'Option 2']);
 
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-            'current_team_id' => 1,
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'est Answe';
-        $results = $interrogator->search($term, null, null, 1);
-        $this->assertCount(1, $results);
+        $group = $interrogator->setOptionOnGroup($group, 'option_1', 'Option 2');
+        $this->assertEquals(['option_1' => 'Option 2', 'option_2' => 'Option 2'], $group->options);
     }
 
-    /** @test */
-    public function can_search_for_fuzzy_match_with_single_char_wildcard()
+    public function test_can_update_a_single_option_on_question()
     {
         $interrogator = new Interrogator();
-        $this->createTestQuestion($interrogator);
+        $question = $this->createTestQuestion($interrogator);
+        $question = $interrogator->updateQuestion($question, null, null, ['option_1' => 'Option 1', 'option_2' => 'Option 2']);
 
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-            'current_team_id' => 1,
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'Test ?nswer';
-        $results = $interrogator->search($term, null, null, 1);
-        $this->assertCount(1, $results);
+        $question = $interrogator->setOptionOnQuestion($question, 'option_1', 'Option 2');
+        $this->assertEquals(['option_1' => 'Option 2', 'option_2' => 'Option 2'], $question->options);
     }
 
-    /** @test */
-    public function can_search_for_fuzzy_match_with_multi_char_wildcard()
+    public function test_can_remove_a_single_option_on_section()
     {
         $interrogator = new Interrogator();
-        $this->createTestQuestion($interrogator);
+        $section = $this->createTestSection($interrogator);
+        $section = $interrogator->updateSection($section, null, ['option_1' => 'Option 1', 'option_2' => 'Option 2']);
 
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-            'current_team_id' => 1,
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'Test *swer';
-        $results = $interrogator->search($term, null, null, 1);
-        $this->assertCount(1, $results);
+        $section = $interrogator->unsetOptionOnSection($section, 'option_1');
+        $this->assertEquals(['option_2' => 'Option 2'], $section->options);
     }
 
-    /** @test */
-    public function can_search_for_exact_match_with_class()
+    public function test_can_remove_a_single_option_on_group()
     {
         $interrogator = new Interrogator();
-        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User');
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client');
-        $group = $interrogator->createGroup('Group 1', $section);
-        $group2 = $interrogator->createGroup('Group 2', $section2);
-        $interrogator->createQuestion('Question 1', 1, $group);
-        $interrogator->createQuestion('Question 2', 1, $group2);
+        $group = $this->createTestGroup($interrogator);
+        $group = $interrogator->updateGroup($group, null, null, ['option_1' => 'Option 1', 'option_2' => 'Option 2']);
 
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-        ]);
-        $client = Client::create([
-            'name' => 'Carly Client',
-            'email' => 'cclient@metricloop.com'
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-        $section = Section::where('class_name', get_class($client))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $client->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'Test Answer';
-        $results = $interrogator->searchExact($term, get_class($user));
-        $this->assertCount(1, $results);
+        $group = $interrogator->unsetOptionOnGroup($group, 'option_1');
+        $this->assertEquals(['option_2' => 'Option 2'], $group->options);
     }
 
-    /** @test */
-    public function can_search_for_fuzzy_match_with_class()
+    public function test_can_remove_a_single_option_on_question()
     {
         $interrogator = new Interrogator();
-        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User');
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client');
-        $group = $interrogator->createGroup('Group 1', $section);
-        $group2 = $interrogator->createGroup('Group 2', $section2);
-        $interrogator->createQuestion('Question 1', 1, $group);
-        $interrogator->createQuestion('Question 2', 1, $group2);
+        $question = $this->createTestQuestion($interrogator);
+        $question = $interrogator->updateQuestion($question, null, null, ['option_1' => 'Option 1', 'option_2' => 'Option 2']);
 
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-        ]);
-        $client = Client::create([
-            'name' => 'Carly Client',
-            'email' => 'cclient@metricloop.com'
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-        $section = Section::where('class_name', get_class($client))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $client->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'est Answe';
-        $results = $interrogator->search($term, get_class($user));
-        $this->assertCount(1, $results);
-    }
-
-    /** @test */
-    public function can_search_for_small_text_fuzzy_match()
-    {
-        $interrogator = new Interrogator();
-        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User');
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client');
-        $group = $interrogator->createGroup('Group 1', $section);
-        $group2 = $interrogator->createGroup('Group 2', $section2);
-        $interrogator->createQuestion('Question 1', 1, $group);
-        $interrogator->createQuestion('Question 2', 2, $group);
-        $interrogator->createQuestion('Question 3', 3, $group);
-        $interrogator->createQuestion('Question 4', 4, $group);
-        $interrogator->createQuestion('Question 5', 5, $group);
-        $interrogator->createQuestion('Question 6', 6, $group);
-        $interrogator->createQuestion('Question 1', 1, $group2);
-        $interrogator->createQuestion('Question 2', 2, $group2);
-        $interrogator->createQuestion('Question 3', 3, $group2);
-        $interrogator->createQuestion('Question 4', 4, $group2);
-        $interrogator->createQuestion('Question 5', 5, $group2);
-        $interrogator->createQuestion('Question 6', 6, $group2);
-
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-        ]);
-        $client = Client::create([
-            'name' => 'Carly Client',
-            'email' => 'cclient@metricloop.com'
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-        $section = Section::where('class_name', get_class($client))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $client->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'est Answe';
-        $results = $interrogator->searchSmallText($term, get_class($user));
-        $this->assertCount(1, $results);
-    }
-
-    /** @test */
-    public function can_search_for_large_text_fuzzy_match()
-    {
-        $interrogator = new Interrogator();
-        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User');
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client');
-        $group = $interrogator->createGroup('Group 1', $section);
-        $group2 = $interrogator->createGroup('Group 2', $section2);
-        $interrogator->createQuestion('Question 1', 1, $group);
-        $interrogator->createQuestion('Question 2', 2, $group);
-        $interrogator->createQuestion('Question 3', 3, $group);
-        $interrogator->createQuestion('Question 4', 4, $group);
-        $interrogator->createQuestion('Question 5', 5, $group);
-        $interrogator->createQuestion('Question 6', 6, $group);
-        $interrogator->createQuestion('Question 1', 1, $group2);
-        $interrogator->createQuestion('Question 2', 2, $group2);
-        $interrogator->createQuestion('Question 3', 3, $group2);
-        $interrogator->createQuestion('Question 4', 4, $group2);
-        $interrogator->createQuestion('Question 5', 5, $group2);
-        $interrogator->createQuestion('Question 6', 6, $group2);
-
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-        ]);
-        $client = Client::create([
-            'name' => 'Carly Client',
-            'email' => 'cclient@metricloop.com'
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-        $section = Section::where('class_name', get_class($client))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $client->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'est Answe';
-        $results = $interrogator->searchLargeText($term, get_class($user));
-        $this->assertCount(1, $results);
-    }
-
-    /** @test */
-    public function can_search_for_numeric_fuzzy_match()
-    {
-        $interrogator = new Interrogator();
-        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User');
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client');
-        $group = $interrogator->createGroup('Group 1', $section);
-        $group2 = $interrogator->createGroup('Group 2', $section2);
-        $interrogator->createQuestion('Question 1', 1, $group);
-        $interrogator->createQuestion('Question 2', 2, $group);
-        $interrogator->createQuestion('Question 3', 3, $group);
-        $interrogator->createQuestion('Question 4', 4, $group);
-        $interrogator->createQuestion('Question 5', 5, $group);
-        $interrogator->createQuestion('Question 6', 6, $group);
-        $interrogator->createQuestion('Question 1', 1, $group2);
-        $interrogator->createQuestion('Question 2', 2, $group2);
-        $interrogator->createQuestion('Question 3', 3, $group2);
-        $interrogator->createQuestion('Question 4', 4, $group2);
-        $interrogator->createQuestion('Question 5', 5, $group2);
-        $interrogator->createQuestion('Question 6', 6, $group2);
-
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-        ]);
-        $client = Client::create([
-            'name' => 'Carly Client',
-            'email' => 'cclient@metricloop.com'
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-        $section = Section::where('class_name', get_class($client))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $client->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'est Answe';
-        $results = $interrogator->searchNumeric($term, get_class($user));
-        $this->assertCount(1, $results);
-    }
-
-    /** @test */
-    public function can_search_for_date_time_fuzzy_match()
-    {
-        $interrogator = new Interrogator();
-        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User');
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client');
-        $group = $interrogator->createGroup('Group 1', $section);
-        $group2 = $interrogator->createGroup('Group 2', $section2);
-        $interrogator->createQuestion('Question 1', 1, $group);
-        $interrogator->createQuestion('Question 2', 2, $group);
-        $interrogator->createQuestion('Question 3', 3, $group);
-        $interrogator->createQuestion('Question 4', 4, $group);
-        $interrogator->createQuestion('Question 5', 5, $group);
-        $interrogator->createQuestion('Question 6', 6, $group);
-        $interrogator->createQuestion('Question 1', 1, $group2);
-        $interrogator->createQuestion('Question 2', 2, $group2);
-        $interrogator->createQuestion('Question 3', 3, $group2);
-        $interrogator->createQuestion('Question 4', 4, $group2);
-        $interrogator->createQuestion('Question 5', 5, $group2);
-        $interrogator->createQuestion('Question 6', 6, $group2);
-
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-        ]);
-        $client = Client::create([
-            'name' => 'Carly Client',
-            'email' => 'cclient@metricloop.com'
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-        $section = Section::where('class_name', get_class($client))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $client->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'est Answe';
-        $results = $interrogator->searchDateTime($term, get_class($user));
-        $this->assertCount(1, $results);
-    }
-
-    /** @test */
-    public function can_search_for_multiple_choice_fuzzy_match()
-    {
-        $interrogator = new Interrogator();
-        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User');
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client');
-        $group = $interrogator->createGroup('Group 1', $section);
-        $group2 = $interrogator->createGroup('Group 2', $section2);
-        $interrogator->createQuestion('Question 1', 1, $group);
-        $interrogator->createQuestion('Question 2', 2, $group);
-        $interrogator->createQuestion('Question 3', 3, $group);
-        $interrogator->createQuestion('Question 4', 4, $group);
-        $interrogator->createQuestion('Question 5', 5, $group);
-        $interrogator->createQuestion('Question 6', 6, $group);
-        $interrogator->createQuestion('Question 1', 1, $group2);
-        $interrogator->createQuestion('Question 2', 2, $group2);
-        $interrogator->createQuestion('Question 3', 3, $group2);
-        $interrogator->createQuestion('Question 4', 4, $group2);
-        $interrogator->createQuestion('Question 5', 5, $group2);
-        $interrogator->createQuestion('Question 6', 6, $group2);
-
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-        ]);
-        $client = Client::create([
-            'name' => 'Carly Client',
-            'email' => 'cclient@metricloop.com'
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-        $section = Section::where('class_name', get_class($client))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $client->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'est Answe';
-        $results = $interrogator->searchMultipleChoice($term, get_class($user));
-        $this->assertCount(1, $results);
-    }
-
-    /** @test */
-    public function can_search_for_file_upload_fuzzy_match()
-    {
-        $interrogator = new Interrogator();
-        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User');
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client');
-        $group = $interrogator->createGroup('Group 1', $section);
-        $group2 = $interrogator->createGroup('Group 2', $section2);
-        $interrogator->createQuestion('Question 1', 1, $group);
-        $interrogator->createQuestion('Question 2', 2, $group);
-        $interrogator->createQuestion('Question 3', 3, $group);
-        $interrogator->createQuestion('Question 4', 4, $group);
-        $interrogator->createQuestion('Question 5', 5, $group);
-        $interrogator->createQuestion('Question 6', 6, $group);
-        $interrogator->createQuestion('Question 1', 1, $group2);
-        $interrogator->createQuestion('Question 2', 2, $group2);
-        $interrogator->createQuestion('Question 3', 3, $group2);
-        $interrogator->createQuestion('Question 4', 4, $group2);
-        $interrogator->createQuestion('Question 5', 5, $group2);
-        $interrogator->createQuestion('Question 6', 6, $group2);
-
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-        ]);
-        $client = Client::create([
-            'name' => 'Carly Client',
-            'email' => 'cclient@metricloop.com'
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-        $section = Section::where('class_name', get_class($client))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $client->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'est Answe';
-        $results = $interrogator->searchFileUpload($term, get_class($user));
-        $this->assertCount(1, $results);
-    }
-
-    /** @test */
-    public function can_search_for_specific_question_fuzzy_match()
-    {
-        $interrogator = new Interrogator();
-        $section = $interrogator->createSection('Section 1', [], 'MetricLoop\Interrogator\User', 1);
-        $section2 = $interrogator->createSection('Section 2', [], 'MetricLoop\Interrogator\Client', 1);
-        $group = $interrogator->createGroup('Group 1', $section, [], 1);
-        $group2 = $interrogator->createGroup('Group 2', $section2, [], 1);
-        $interrogator->createQuestion('Question 1', 1, $group, [], [], 1);
-        $interrogator->createQuestion('Question 2', 2, $group, [], [], 1);
-        $interrogator->createQuestion('Question 3', 3, $group, [], [], 1);
-        $interrogator->createQuestion('Question 4', 4, $group, [], [], 1);
-        $interrogator->createQuestion('Question 5', 5, $group, [], [], 1);
-        $interrogator->createQuestion('Question 6', 6, $group, [], [], 1);
-        $interrogator->createQuestion('Question 1', 1, $group2, [], [], 1);
-        $interrogator->createQuestion('Question 2', 2, $group2, [], [], 1);
-        $interrogator->createQuestion('Question 3', 3, $group2, [], [], 1);
-        $interrogator->createQuestion('Question 4', 4, $group2, [], [], 1);
-        $interrogator->createQuestion('Question 5', 5, $group2, [], [], 1);
-        $interrogator->createQuestion('Question 6', 6, $group2, [], [], 1);
-
-        $user = User::create([
-            'name' => 'Ulysses User',
-            'email' => 'uuser@metricloop.com',
-            'current_team_id' => 1,
-        ]);
-        $client = Client::create([
-            'name' => 'Carly Client',
-            'email' => 'cclient@metricloop.com',
-            'current_team_id' => 1,
-        ]);
-
-        $section = Section::where('class_name', get_class($user))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $user->answerQuestion($question, 'Test Answer');
-            }
-        }
-        $section = Section::where('class_name', get_class($client))->first();
-        foreach($section->groups as $group) {
-            foreach($group->questions as $question) {
-                $client->answerQuestion($question, 'Test Answer');
-            }
-        }
-
-        $term = 'est Answe';
-        $question = Question::first();
-        $results = $interrogator->searchQuestion($term, get_class($user), $question, 1);
-        $this->assertCount(1, $results);
+        $question = $interrogator->unsetOptionOnQuestion($question, 'option_1');
+        $this->assertEquals(['option_2' => 'Option 2'], $question->options);
     }
     
 }
