@@ -81,9 +81,7 @@ class Interrogator
      */
     public function setOptionOnSection($section, $key, $value)
     {
-        $section = $this->resolveSection($section);
-        $section->setOption($key, $value);
-        return $section;
+        return $this->resolveSection($section)->setOption($key, $value);
     }
 
     /**
@@ -95,9 +93,7 @@ class Interrogator
      */
     public function unsetOptionOnSection($section, $key)
     {
-        $section = $this->resolveSection($section);
-        $section->unsetOption($key);
-        return $section;
+        return $this->resolveSection($section)->unsetOption($key);
     }
 
     /**
@@ -210,9 +206,7 @@ class Interrogator
      */
     public function setOptionOnGroup($group, $key, $value)
     {
-        $group = $this->resolveGroup($group);
-        $group->setOption($key, $value);
-        return $group;
+        return $this->resolveGroup($group)->setOption($key, $value);
     }
 
     /**
@@ -224,9 +218,7 @@ class Interrogator
      */
     public function unsetOptionOnGroup($group, $key)
     {
-        $group = $this->resolveGroup($group);
-        $group->unsetOption($key);
-        return $group;
+        return $this->resolveGroup($group)->unsetOption($key);
     }
 
     /**
@@ -322,9 +314,7 @@ class Interrogator
      */
     public function setOptionOnQuestion($question, $key, $value)
     {
-        $question = $this->resolveQuestion($question);
-        $question->setOption($key, $value);
-        return $question;
+        return $this->resolveQuestion($question)->setOption($key, $value);
     }
 
     /**
@@ -336,9 +326,7 @@ class Interrogator
      */
     public function unsetOptionOnQuestion($question, $key)
     {
-        $question = $this->resolveQuestion($question);
-        $question->unsetOption($key);
-        return $question;
+        return $this->resolveQuestion($question)->unsetOption($key);
     }
 
     /**
