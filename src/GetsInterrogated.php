@@ -11,13 +11,6 @@ use Illuminate\Database\Eloquent\Model;
 trait GetsInterrogated
 {
     /**
-     * The database table used by the model.
-     *
-     * @var
-     */
-    protected $table;
-
-    /**
      * BelongsToMany relationship with ModelSection.
      *
      * @return \Illuminate\Support\Collection
