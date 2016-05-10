@@ -613,12 +613,10 @@ class Interrogator
      */
     public function getSections($class = null, $team_id = null)
     {
-        if($class) {
-            return Section::where('class_name', $class)
-                ->where('team_id', $team_id)
-                ->get();
-        }
         return Section::where('team_id', $team_id)
+            ->when($class, function($query) use ($class) {
+                return $query->where('class_name', $class);
+            })
             ->get();
     }
 
@@ -631,13 +629,10 @@ class Interrogator
      */
     public function getGroups($section = null, $team_id = null)
     {
-        if($section) {
-            $section = $this->resolveSection($section);
-            return Group::where('section_id', $section->id)
-                ->where('team_id', $team_id)
-                ->get();
-        }
         return Group::where('team_id', $team_id)
+            ->when($section, function($query) use ($section) {
+                return $query->where('section_id', $this->resolveSection($section)->id);
+            })
             ->get();
     }
 
@@ -651,31 +646,13 @@ class Interrogator
      */
     public function getQuestions($question_type = null, $group = null, $team_id = null)
     {
-        if($question_type && $group) {
-            $question_type = $this->resolveQuestionType($question_type);
-            $group = $this->resolveGroup($group);
-            return Question::where('question_type_id', $question_type->id)
-                ->where('group_id', $group->id)
-                ->where('team_id', $team_id)
-                ->with('type')
-                ->get();
-        }
-        if($question_type) {
-            $question_type = $this->resolveQuestionType($question_type);
-            return Question::where('question_type_id', $question_type->id)
-                ->where('team_id', $team_id)
-                ->with('type')
-                ->get();
-        }
-        if($group) {
-            $group = $this->resolveGroup($group);
-            return Question::where('group_id', $group->id)
-                ->where('team_id', $team_id)
-                ->with('type')
-                ->get();
-        }
-        
         return Question::where('team_id', $team_id)
+            ->when($group, function($query) use ($group) {
+                return $query->where('group_id', $this->resolveGroup($group)->id);
+            })
+            ->when($question_type, function($query) use ($question_type) {
+                return $query->where('question_type_id', $this->resolveQuestionType($question_type)->id);
+            })
             ->with('type')
             ->get();
     }
