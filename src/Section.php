@@ -132,4 +132,14 @@ class Section extends Model
 
         return $this;
     }
+
+    /**
+     * Accessor for attribute.
+     *
+     * @return int
+     */
+    public function getOrderAttribute()
+    {
+        return isset($this->options['order']) ? $this->options['order'] : 1;
+    }
 }
