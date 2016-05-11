@@ -194,4 +194,14 @@ class Question extends Model
         $this->setOption('allows_multiple_choice_other', true);
         return $this;
     }
+
+    /**
+     * Accessor for attribute.
+     *
+     * @return int
+     */
+    public function getOrderAttribute()
+    {
+        return isset($this->options['order']) ? $this->options['order'] : 1;
+    }
 }
