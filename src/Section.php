@@ -46,6 +46,15 @@ class Section extends Model
     protected $casts = [
         'options' => 'array',
     ];
+
+    /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'order'
+    ];
     
     /**
      * Creates a new instance of the model.
