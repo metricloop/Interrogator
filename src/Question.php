@@ -51,6 +51,15 @@ class Question extends Model
     ];
 
     /**
+     * The accessors to append to the model's array form.
+     *
+     * @var array
+     */
+    protected $appends = [
+        'order'
+    ];
+
+    /**
      * Creates a new instance of the model.
      *
      * Question constructor.

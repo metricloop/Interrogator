@@ -617,7 +617,8 @@ class Interrogator
             ->when($class, function($query) use ($class) {
                 return $query->where('class_name', $class);
             })
-            ->get();
+            ->get()
+            ->sortBy('order');
     }
 
     /**
@@ -633,7 +634,8 @@ class Interrogator
             ->when($section, function($query) use ($section) {
                 return $query->where('section_id', $this->resolveSection($section)->id);
             })
-            ->get();
+            ->get()
+            ->sortBy('order');
     }
 
     /**
@@ -654,7 +656,8 @@ class Interrogator
                 return $query->where('question_type_id', $this->resolveQuestionType($question_type)->id);
             })
             ->with('type')
-            ->get();
+            ->get()
+            ->sortBy('order');
     }
 
     /**
