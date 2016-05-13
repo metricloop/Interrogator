@@ -870,6 +870,60 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $question = $interrogator->unsetOptionOnQuestion($question, 'option_1');
         $this->assertEquals(['option_2' => 'Option 2'], $question->options);
     }
+
+    /**
+     * @expectedException MetricLoop\Interrogator\Exceptions\SectionNotFoundException
+     */
+    public function test_throws_section_not_found_exception_when_using_id()
+    {
+        $interrogator = new Interrogator();
+        $interrogator->getSection(1);
+    }
+
+    /**
+     * @expectedException MetricLoop\Interrogator\Exceptions\SectionNotFoundException
+     */
+    public function test_throws_section_not_found_exception_when_using_slug()
+    {
+        $interrogator = new Interrogator();
+        $interrogator->getSection('foo');
+    }
+
+    /**
+     * @expectedException MetricLoop\Interrogator\Exceptions\GroupNotFoundException
+     */
+    public function test_throws_group_not_found_exception_when_using_id()
+    {
+        $interrogator = new Interrogator();
+        $interrogator->getGroup(1);
+    }
+
+    /**
+     * @expectedException MetricLoop\Interrogator\Exceptions\GroupNotFoundException
+     */
+    public function test_throws_group_not_found_exception_when_using_slug()
+    {
+        $interrogator = new Interrogator();
+        $interrogator->getGroup('foo');
+    }
+
+    /**
+     * @expectedException MetricLoop\Interrogator\Exceptions\QuestionNotFoundException
+     */
+    public function test_throws_question_not_found_exception_when_using_id()
+    {
+        $interrogator = new Interrogator();
+        $interrogator->getQuestion(1);
+    }
+
+    /**
+     * @expectedException MetricLoop\Interrogator\Exceptions\QuestionNotFoundException
+     */
+    public function test_throws_question_not_found_exception_when_using_slug()
+    {
+        $interrogator = new Interrogator();
+        $interrogator->getQuestion('foo');
+    }
     
 }
 

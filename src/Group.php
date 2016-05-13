@@ -3,8 +3,10 @@
 namespace MetricLoop\Interrogator;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use MetricLoop\Interrogator\Exceptions\GroupNotFoundException;
 
 class Group extends Model
 {
@@ -161,5 +163,34 @@ class Group extends Model
     public function getOrderAttribute()
     {
         return isset($this->options['order']) ? $this->options['order'] : 1;
+    }
+
+    /**
+     * Resolves Group object regardless of given identifier.
+     *
+     * @param $group
+     * @return null
+     * @throws GroupNotFoundException
+     */
+    public static function resolveSelf($group)
+    {
+        if(is_null($group)) { return null; }
+
+        if(!$group instanceof Group) {
+            if(is_numeric($group)) {
+                try {
+                    $group = Group::findOrFail($group);
+                } catch (ModelNotFoundException $e) {
+                    throw new GroupNotFoundException('Group not found with the given ID.');
+                }
+            } else {
+                try {
+                    $group = Group::whereSlug($group)->firstOrFail();
+                } catch (ModelNotFoundException $e) {
+                    throw new GroupNotFoundException('Group not found with the given slug.');
+                }
+            }
+        }
+        return $group;
     }
 }

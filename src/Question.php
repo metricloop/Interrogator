@@ -3,7 +3,9 @@
 namespace MetricLoop\Interrogator;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use MetricLoop\Interrogator\Exceptions\QuestionNotFoundException;
 
 class Question extends Model
 {
@@ -212,5 +214,34 @@ class Question extends Model
     public function getOrderAttribute()
     {
         return isset($this->options['order']) ? $this->options['order'] : 1;
+    }
+
+    /**
+     * Resolves Question object regardless of given identifier.
+     *
+     * @param $question
+     * @return \Illuminate\Database\Eloquent\Collection|Model|null
+     * @throws QuestionNotFoundException
+     */
+    public static function resolveSelf($question)
+    {
+        if(is_null($question)) { return null; }
+
+        if(!$question instanceof Question) {
+            if(is_numeric($question)) {
+                try {
+                    $question = Question::with('type')->findOrFail($question);
+                } catch (ModelNotFoundException $e) {
+                    throw new QuestionNotFoundException('Question not found with the given ID.');
+                }
+            } else {
+                try {
+                    $question = Question::whereSlug($question)->with('type')->firstOrFail();
+                } catch (ModelNotFoundException $e) {
+                    throw new QuestionNotFoundException('Question not found with the given slug.');
+                }
+            }
+        }
+        return $question;
     }
 }

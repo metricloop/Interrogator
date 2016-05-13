@@ -3,6 +3,8 @@
 namespace MetricLoop\Interrogator;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use MetricLoop\Interrogator\Exceptions\QuestionNotFoundException;
 
 /**
  * Trait GetsInterrogated.
@@ -40,19 +42,18 @@ trait GetsInterrogated
      */
     public function getAnswerFromQuestion($question)
     {
-        if(!$question instanceof Question) {
-            if(is_numeric($question)) {
-                $question = Question::findOrFail($question);
-            } else {
-                $question = Question::whereSlug($question)->first();
-            }
-        }
+        $question = Question::resolveSelf($question);
 
         if($question->group->section->class_name === get_class($this)) {
-            return $this->answers()
-                ->where('question_id', $question->id)
-                ->where('team_id', $this->current_team_id)
-                ->first();
+            try {
+                return $this->answers()
+                    ->where('question_id', $question->id)
+                    ->where('team_id', $this->current_team_id)
+                    ->firstOrFail();
+
+            } catch (ModelNotFoundException $e) {
+                return null;
+            }
         }
 
         return null;
@@ -68,13 +69,7 @@ trait GetsInterrogated
      */
     public function answerQuestion($question, $value)
     {
-        if(!$question instanceof Question) {
-            if(is_numeric($question)) {
-                $question = Question::findOrFail($question);
-            } else {
-                $question = Question::whereSlug($question)->first();
-            }
-        }
+        $question = Question::resolveSelf($question);
         $answer = $this->getAnswerFromQuestion($question);
 
         if(!$answer) {

@@ -2,6 +2,8 @@
 
 namespace MetricLoop\Interrogator;
 
+use MetricLoop\Interrogator\Exceptions\SectionNotFoundException;
+
 class Interrogator
 {
     /**
@@ -51,11 +53,12 @@ class Interrogator
      * @param array $options
      * @param null $class
      * @return mixed
+     * @throws SectionNotFoundException
      */
 
     public function updateSection($section, $name = null, $options = [], $class = null)
     {
-        $section = $this->resolveSection($section);
+        $section = Section::resolveSelf($section);
 
         $attributes = [];
         if(isset($name)) {
@@ -81,7 +84,7 @@ class Interrogator
      */
     public function setOptionOnSection($section, $key, $value)
     {
-        return $this->resolveSection($section)->setOption($key, $value);
+        return Section::resolveSelf($section)->setOption($key, $value);
     }
 
     /**
@@ -93,7 +96,7 @@ class Interrogator
      */
     public function unsetOptionOnSection($section, $key)
     {
-        return $this->resolveSection($section)->unsetOption($key);
+        return Section::resolveSelf($section)->unsetOption($key);
     }
 
     /**
@@ -104,7 +107,7 @@ class Interrogator
      */
     public function detachSection($section)
     {
-        $section = $this->resolveSection($section);
+        $section = Section::resolveSelf($section);
 
         $section->class_name = null;
         $section->save();
@@ -121,7 +124,7 @@ class Interrogator
      */
     public function deleteSection($section)
     {
-        $section = $this->resolveSection($section);
+        $section = Section::resolveSelf($section);
         Section::destroy($section->id);
     }
 
@@ -136,7 +139,7 @@ class Interrogator
      */
     public function createGroup($name, $section, $options = [], $team_id = null)
     {
-        $section = $this->resolveSection($section);
+        $section = Section::resolveSelf($section);
         
         $group = Group::create([
             'name' => $name,
@@ -178,8 +181,8 @@ class Interrogator
      */
     public function updateGroup($group, $name = null, $section = null, $options = [])
     {
-        $group = $this->resolveGroup($group);
-        $section = $this->resolveSection($section);
+        $group = Group::resolveSelf($group);
+        $section = Section::resolveSelf($section);
 
         $attributes = [];
         if(isset($name)) {
@@ -206,7 +209,7 @@ class Interrogator
      */
     public function setOptionOnGroup($group, $key, $value)
     {
-        return $this->resolveGroup($group)->setOption($key, $value);
+        return Group::resolveSelf($group)->setOption($key, $value);
     }
 
     /**
@@ -218,7 +221,7 @@ class Interrogator
      */
     public function unsetOptionOnGroup($group, $key)
     {
-        return $this->resolveGroup($group)->unsetOption($key);
+        return Group::resolveSelf($group)->unsetOption($key);
     }
 
     /**
@@ -230,8 +233,7 @@ class Interrogator
      */
     public function deleteGroup($group)
     {
-        $group = $this->resolveGroup($group);
-        $group->delete();
+        Group::resolveSelf($group)->delete();
     }
 
     /**
@@ -247,8 +249,8 @@ class Interrogator
      */
     public function createQuestion($name, $question_type, $group, $options = [], $choices = [], $team_id = null)
     {
-        $group = $this->resolveGroup($group);
-        $question_type = $this->resolveQuestionType($question_type);
+        $group = Group::resolveSelf($group);
+        $question_type = QuestionType::resolveSelf($question_type);
 
         $question = Question::create([
             'name' => $name,
@@ -275,8 +277,8 @@ class Interrogator
      */
     public function updateQuestion($question, $name = null, $group = null, $options = [])
     {
-        $question = $this->resolveQuestion($question);
-        $group = $this->resolveGroup($group);
+        $question = Question::resolveSelf($question);
+        $group = Group::resolveSelf($group);
 
         $attributes = [];
         if(isset($name)) {
@@ -314,7 +316,7 @@ class Interrogator
      */
     public function setOptionOnQuestion($question, $key, $value)
     {
-        return $this->resolveQuestion($question)->setOption($key, $value);
+        return Question::resolveSelf($question)->setOption($key, $value);
     }
 
     /**
@@ -326,7 +328,7 @@ class Interrogator
      */
     public function unsetOptionOnQuestion($question, $key)
     {
-        return $this->resolveQuestion($question)->unsetOption($key);
+        return Question::resolveSelf($question)->unsetOption($key);
     }
 
     /**
@@ -339,7 +341,7 @@ class Interrogator
      */
     public function createSmallTextQuestion($name, $group, $options = [])
     {
-        $group = $this->resolveGroup($group);
+        $group = Group::resolveSelf($group);
         $question_type_id = QuestionType::where('slug', 'small_text')->first()->id;
 
         return $this->createQuestion($name, $question_type_id, $group, $options);
@@ -355,7 +357,7 @@ class Interrogator
      */
     public function createLargeTextQuestion($name, $group, $options = [])
     {
-        $group = $this->resolveGroup($group);
+        $group = Group::resolveSelf($group);
         $question_type_id = QuestionType::where('slug', 'large_text')->first()->id;
 
         return $this->createQuestion($name, $question_type_id, $group, $options);
@@ -371,7 +373,7 @@ class Interrogator
      */
     public function createNumericQuestion($name, $group, $options = [])
     {
-        $group = $this->resolveGroup($group);
+        $group = Group::resolveSelf($group);
         $question_type_id = QuestionType::where('slug', 'numeric')->first()->id;
 
         return $this->createQuestion($name, $question_type_id, $group, $options);
@@ -387,7 +389,7 @@ class Interrogator
      */
     public function createDateTimeQuestion($name, $group, $options = [])
     {
-        $group = $this->resolveGroup($group);
+        $group = Group::resolveSelf($group);
         $question_type_id = QuestionType::where('slug', 'date_time')->first()->id;
 
         return $this->createQuestion($name, $question_type_id, $group, $options);
@@ -404,7 +406,7 @@ class Interrogator
      */
     public function createMultipleChoiceQuestion($name, $group, $choices = [], $allows_multiple_choice_other = false)
     {
-        $group = $this->resolveGroup($group);
+        $group = Group::resolveSelf($group);
         $question_type_id = QuestionType::where('slug', 'multiple_choice')->first()->id;
 
         $question = $this->createQuestion($name, $question_type_id, $group, [], $choices);
@@ -424,7 +426,7 @@ class Interrogator
      */
     public function createFileUploadQuestion($name, $group, $options = [])
     {
-        $group = $this->resolveGroup($group);
+        $group = Group::resolveSelf($group);
         $question_type_id = QuestionType::where('slug', 'file_upload')->first()->id;
 
         return $this->createQuestion($name, $question_type_id, $group, $options);
@@ -438,8 +440,7 @@ class Interrogator
      */
     public function deleteQuestion($question)
     {
-        $question = $this->resolveQuestion($question);
-        $question->delete();
+        Question::resolveSelf($question)->delete();
     }
 
     /**
@@ -509,7 +510,7 @@ class Interrogator
      */
     public function searchQuestion($term, $class_name = null, $question, $team_id = null)
     {
-        $question = $this->resolveQuestion($question);
+        $question = Question::resolveSelf($question);
 
         return $this->search($term, $class_name, [$question->id], $team_id);
     }
@@ -633,7 +634,7 @@ class Interrogator
     {
         return Group::where('team_id', $team_id)
             ->when($section, function($query) use ($section) {
-                return $query->where('section_id', $this->resolveSection($section)->id);
+                return $query->where('section_id', Section::resolveSelf($section)->id);
             })
             ->get()
             ->sortBy('order')
@@ -652,10 +653,10 @@ class Interrogator
     {
         return Question::where('team_id', $team_id)
             ->when($group, function($query) use ($group) {
-                return $query->where('group_id', $this->resolveGroup($group)->id);
+                return $query->where('group_id', Group::resolveSelf($group)->id);
             })
             ->when($question_type, function($query) use ($question_type) {
-                return $query->where('question_type_id', $this->resolveQuestionType($question_type)->id);
+                return $query->where('question_type_id', QuestionType::resolveSelf($question_type)->id);
             })
             ->with('type')
             ->get()
@@ -671,11 +672,7 @@ class Interrogator
      */
     public function getSection($section = null)
     {
-        if(is_null($section)) {
-            return false;
-        }
-        $section = $this->resolveSection($section);
-        return $section;
+        return Section::resolveSelf($section);
     }
 
     /**
@@ -686,11 +683,7 @@ class Interrogator
      */
     public function getGroup($group = null)
     {
-        if(is_null($group)) {
-            return false;
-        }
-        $group = $this->resolveGroup($group);
-        return $group;
+        return Group::resolveSelf($group);
     }
 
     /**
@@ -701,83 +694,6 @@ class Interrogator
      */
     public function getQuestion($question = null)
     {
-        if(is_null($question)) {
-            return false;
-        }
-        $question = $this->resolveQuestion($question);
-        return $question;
+        return Question::resolveSelf($question);
     }
-
-    /**
-     * Resolves Section if given Object, ID, or Slug.
-     *
-     * @param $section
-     * @return mixed
-     */
-    private function resolveSection($section)
-    {
-        if(!$section instanceof Section) {
-            if(is_numeric($section)) {
-                $section = Section::findOrFail($section);
-            } else {
-                $section = Section::whereSlug($section)->first();
-            }
-        }
-        return $section;
-    }
-
-    /**
-     * Resolves Group if given Object, ID, or Slug.
-     *
-     * @param $group
-     * @return mixed
-     */
-    private function resolveGroup($group)
-    {
-        if(!$group instanceof Group) {
-            if(is_numeric($group)) {
-                $group = Group::findOrFail($group);
-            } else {
-                $group = Group::whereSlug($group)->first();
-            }
-        }
-        return $group;
-    }
-
-    /**
-     * Resolves Question if given Object, ID, or Slug.
-     *
-     * @param $question
-     * @return mixed
-     */
-    private function resolveQuestion($question)
-    {
-        if(!$question instanceof Question) {
-            if(is_numeric($question)) {
-                $question = Question::with('type')->findOrFail($question);
-            } else {
-                $question = Question::whereSlug($question)->with('type')->first();
-            }
-        }
-        return $question;
-    }
-
-    /**
-     * Resolves QuestionType if given Object, ID, or Slug.
-     *
-     * @param $questionType
-     * @return mixed
-     */
-    private function resolveQuestionType($questionType)
-    {
-        if(!$questionType instanceof QuestionType) {
-            if(is_numeric($questionType)) {
-                $questionType = QuestionType::findOrFail($questionType);
-            } else {
-                $questionType = QuestionType::whereSlug($questionType)->first();
-            }
-        }
-        return $questionType;
-    }
-
 }
