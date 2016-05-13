@@ -3,7 +3,9 @@
 namespace MetricLoop\Interrogator;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use MetricLoop\Interrogator\Exceptions\SectionNotFoundException;
 
 class Section extends Model
 {
@@ -150,5 +152,34 @@ class Section extends Model
     public function getOrderAttribute()
     {
         return isset($this->options['order']) ? $this->options['order'] : 1;
+    }
+
+    /**
+     * Resolves Section object regardless of given identifier.
+     *
+     * @param $section
+     * @return null
+     * @throws SectionNotFoundException
+     */
+    public static function resolveSelf($section)
+    {
+        if(is_null($section)) { return null; }
+
+        if(!$section instanceof Section) {
+            if(is_numeric($section)) {
+                try {
+                    $section = Section::findOrFail($section);
+                } catch (ModelNotFoundException $e) {
+                    throw new SectionNotFoundException('Section not found with the given ID.');
+                }
+            } else {
+                try {
+                    $section = Section::whereSlug($section)->firstOrFail();
+                } catch (ModelNotFoundException $e) {
+                    throw new SectionNotFoundException('Section not found with the given slug.');
+                }
+            }
+        }
+        return $section;
     }
 }

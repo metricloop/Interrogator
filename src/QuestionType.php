@@ -3,6 +3,8 @@
 namespace MetricLoop\Interrogator;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use MetricLoop\Interrogator\Exceptions\QuestionTypeNotFoundException;
 
 class QuestionType extends Model
 {
@@ -43,5 +45,34 @@ class QuestionType extends Model
     public function questions()
     {
         return $this->hasMany(Question::class);
+    }
+
+    /**
+     * Resolves QuestionType object regardless of given identifier.
+     * 
+     * @param $questionType
+     * @return null
+     * @throws QuestionTypeNotFoundException
+     */
+    public static function resolveSelf($questionType)
+    {
+        if(is_null($questionType)) { return null; }
+
+        if(!$questionType instanceof QuestionType) {
+            if(is_numeric($questionType)) {
+                try {
+                    $questionType = QuestionType::findOrFail($questionType);
+                } catch (ModelNotFoundException $e) {
+                    throw new QuestionTypeNotFoundException('Question Type not found with the given ID.');
+                }
+            } else {
+                try {
+                    $questionType = QuestionType::whereSlug($questionType)->firstOrFail();
+                } catch (ModelNotFoundException $e) {
+                    throw new QuestionTypeNotFoundException('Question Type not found with the given slug.');
+                }
+            }
+        }
+        return $questionType;
     }
 }
