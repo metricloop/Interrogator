@@ -58,7 +58,9 @@ class Question extends Model
      * @var array
      */
     protected $appends = [
-        'order'
+        'order',
+        'format',
+        'allows_multiple_choice_other'
     ];
 
     /**
@@ -122,9 +124,9 @@ class Question extends Model
      *
      * @return bool
      */
-    public function allowsMultipleChoiceOther()
+    public function getAllowsMultipleChoiceOtherAttribute()
     {
-        return isset($this->options['allows_multiple_choice_other']) ? true : false;
+        return isset($this->options['allows_multiple_choice_other']) ? $this->options['allows_multiple_choice_other'] : false;
     }
 
     /**
@@ -202,8 +204,7 @@ class Question extends Model
      */
     public function setAllowsMultipleChoiceOtherOption()
     {
-        $this->setOption('allows_multiple_choice_other', true);
-        return $this;
+        return $this->setOption('allows_multiple_choice_other', true);
     }
 
     /**
@@ -214,6 +215,16 @@ class Question extends Model
     public function getOrderAttribute()
     {
         return isset($this->options['order']) ? $this->options['order'] : 1;
+    }
+
+    /**
+     * Accessor for attribute.
+     *
+     * @return int
+     */
+    public function getFormatAttribute()
+    {
+        return isset($this->options['format']) ? $this->options['format'] : null;
     }
 
     /**

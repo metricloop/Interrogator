@@ -4,7 +4,6 @@ namespace MetricLoop\Interrogator;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
-use MetricLoop\Interrogator\Exceptions\QuestionNotFoundException;
 
 /**
  * Trait GetsInterrogated.
