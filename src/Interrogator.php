@@ -38,6 +38,7 @@ class Interrogator
      */
     public function copySection($section, $targetClass)
     {
+        $section = Section::resolveSelf($section);
         $newSection = $this->createSection($section->name, [], $targetClass);
         $section->groups->each(function($group) use ($newSection) {
             $this->copyGroup($group, $newSection);
@@ -124,8 +125,7 @@ class Interrogator
      */
     public function deleteSection($section)
     {
-        $section = Section::resolveSelf($section);
-        Section::destroy($section->id);
+        Section::resolveSelf($section)->delete();
     }
 
     /**
@@ -163,6 +163,7 @@ class Interrogator
      */
     public function copyGroup($group, $targetSection)
     {
+        $group = Group::resolveSelf($group);
         $newGroup = $this->createGroup($group->name, $targetSection, $group->options);
         $group->questions->each(function ($question) use ($newGroup) {
             $this->copyQuestion($question, $newGroup);
@@ -303,6 +304,7 @@ class Interrogator
      */
     public function copyQuestion($question, $targetGroup)
     {
+        $question = Question::resolveSelf($question);
         return $this->createQuestion($question->name, $question->question_type_id, $targetGroup, $question->options, $question->choices);
     }
 
@@ -449,19 +451,20 @@ class Interrogator
      * @param $term
      * @param null $class_name
      * @param null $question_ids
+     * @param null $team_id
      * @return mixed
      */
     public function searchExact($term, $class_name = null, $question_ids = null, $team_id = null)
     {
-        $query = Answer::where('value', $term)
-            ->where('team_id', $team_id);
-        if($class_name) {
-            $query = $query->where('answerable_type', $class_name);
-        }
-        if($question_ids) {
-            $query = $query->whereIn('question_id', $question_ids);
-        }
-        return $query->get();
+        return Answer::where('value', $term)
+            ->where('team_id', $team_id)
+            ->when($class_name, function($query) use ($class_name) {
+                return $query->where('answerable_type', $class_name);
+            })
+            ->when($question_ids, function($query) use ($question_ids) {
+                return $query->whereIn('question_id', $question_ids);
+            })
+            ->get();
     }
 
     /**
@@ -475,28 +478,41 @@ class Interrogator
      */
     public function search($term, $class_name = null, $question_ids = [], $team_id = null)
     {
-        $term = '%' . $term . '%';
-
-        $query = Answer::where('value', 'LIKE', $this->wildcardReplace($term))
-            ->where('team_id', $team_id);
-        if($class_name) {
-            $query = $query->where('answerable_type', $class_name);
-        }
-        if($question_ids) {
-            $query = $query->whereIn('question_id', $question_ids);
-        }
-        return $query->get();
+        return Answer::where('value', 'LIKE', $this->wildcardReplace($term, $pad = true))
+            ->where('team_id', $team_id)
+            ->when($class_name, function($query) use ($class_name) {
+                return $query->where('answerable_type', $class_name);
+            })
+            ->when($question_ids, function($query) use ($question_ids) {
+                return $query->whereIn('question_id', $question_ids);
+            })
+            ->get();
     }
 
     /**
      * Replaces user-friendly wildcards with SQL-specific wildcards.
      *
      * @param $term
+     * @param bool $pad
      * @return mixed
      */
-    private function wildcardReplace($term)
+    private function wildcardReplace($term, $pad = false)
     {
+        if($pad) {
+            $term = $this->padSearchTerm($term);
+        }
         return str_replace(['*', '?'], ['%', '_'], $term);
+    }
+
+    /**
+     * Pads search term with wildcards.
+     *
+     * @param $term
+     * @return string
+     */
+    private function padSearchTerm($term)
+    {
+        return '%' . $term . '%';
     }
 
     /**

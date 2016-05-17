@@ -417,17 +417,17 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $question = $interrogator->createMultipleChoiceQuestion('Question 1', $group, $choices);
         $this->assertEquals('Question 1', $question->name);
         $this->assertEquals(['option_1' => 'Option 1', 'option_2' => 'Option 2'], $question->choices);
-        $this->assertFalse($question->allowsMultipleChoiceOther());
+        $this->assertFalse($question->allowsMultipleChoiceOther);
 
         $question = $interrogator->createMultipleChoiceQuestion('Question 2', $group->id, $choices);
         $this->assertEquals('Question 2', $question->name);
         $this->assertEquals(['option_1' => 'Option 1', 'option_2' => 'Option 2'], $question->choices);
-        $this->assertFalse($question->allowsMultipleChoiceOther());
+        $this->assertFalse($question->allowsMultipleChoiceOther);
 
         $question = $interrogator->createMultipleChoiceQuestion('Question 3', $group->slug, $choices);
         $this->assertEquals('Question 3', $question->name);
         $this->assertEquals(['option_1' => 'Option 1', 'option_2' => 'Option 2'], $question->choices);
-        $this->assertFalse($question->allowsMultipleChoiceOther());
+        $this->assertFalse($question->allowsMultipleChoiceOther);
     }
 
     /** @test */
@@ -439,7 +439,7 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $question = $interrogator->createMultipleChoiceQuestion('Question 1', $group, $choices, true);
         $this->assertEquals('Question 1', $question->name);
         $this->assertContains('Option 1', $question->choices);
-        $this->assertTrue($question->allowsMultipleChoiceOther());
+        $this->assertTrue($question->allowsMultipleChoiceOther);
     }
 
     /** @test */
@@ -478,9 +478,9 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $group = $this->createTestGroup($interrogator);
         $choices = ['Option 1','Option 2'];
         $question = $interrogator->createMultipleChoiceQuestion('Question 1', $group, $choices);
-        $this->assertFalse($question->allowsMultipleChoiceOther());
+        $this->assertFalse($question->allowsMultipleChoiceOther);
         $question = $question->setAllowsMultipleChoiceOtherOption();
-        $this->assertTrue($question->allowsMultipleChoiceOther());
+        $this->assertTrue($question->allowsMultipleChoiceOther);
     }
 
     /** @test */
