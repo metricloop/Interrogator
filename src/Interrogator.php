@@ -129,6 +129,17 @@ class Interrogator
     }
 
     /**
+     * Restores a particular Section.
+     *
+     * @param $section
+     * @throws SectionNotFoundException
+     */
+    public function restoreSection($section)
+    {
+        return Section::resolveSelf($section, $withTrashed = true)->restore();
+    }
+
+    /**
      * Creates a New Group.
      *
      * @param $name
@@ -225,7 +236,7 @@ class Interrogator
     }
 
     /**
-     * Updates the given section.
+     * Deletes the given group.
      *
      * @param $group
      * @return mixed
@@ -234,6 +245,18 @@ class Interrogator
     public function deleteGroup($group)
     {
         Group::resolveSelf($group)->delete();
+    }
+
+    /**
+     * Restores a particular Group.
+     *
+     * @param $group
+     * @return mixed
+     * @throws Exceptions\GroupNotFoundException
+     */
+    public function restoreGroup($group)
+    {
+        return Group::resolveSelf($group, $withTrashed = true)->restore();
     }
 
     /**
@@ -441,6 +464,18 @@ class Interrogator
     public function deleteQuestion($question)
     {
         Question::resolveSelf($question)->delete();
+    }
+
+    /**
+     * Restores a particular Question.
+     *
+     * @param $question
+     * @return mixed
+     * @throws Exceptions\QuestionNotFoundException
+     */
+    public function restoreQuestion($question)
+    {
+        return Question::resolveSelf($question, $withTrashed = true)->restore();
     }
 
     /**

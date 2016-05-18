@@ -118,6 +118,21 @@ class Question extends Model
     }
 
     /**
+     * Restores Question and Answers with matching "deleted_at" timestamps.
+     */
+    public function restore()
+    {
+        $deleted_at = $this->deleted_at;
+        $this->answers()->withTrashed()->get()->filter(function ($answer) use ($deleted_at) {
+            $first = $second = $deleted_at;
+            return $answer->deleted_at->gte($first) && $answer->deleted_at->lte($second->addSecond());
+        })->each(function ($answer) {
+            $answer->restore();
+        });
+        parent::restore();
+    }
+
+    /**
      * Accessor for attribute.
      *
      * @return bool
@@ -220,23 +235,32 @@ class Question extends Model
      * Resolves Question object regardless of given identifier.
      *
      * @param $question
+     * @param bool $withTrashed
      * @return \Illuminate\Database\Eloquent\Collection|Model|null
      * @throws QuestionNotFoundException
      */
-    public static function resolveSelf($question)
+    public static function resolveSelf($question, $withTrashed = false)
     {
         if(is_null($question)) { return null; }
 
         if(!$question instanceof Question) {
             if(is_numeric($question)) {
                 try {
-                    $question = Question::with('type')->findOrFail($question);
+                    if($withTrashed) {
+                        $question = Question::withTrashed()->with('type')->findOrFail($question);
+                    } else {
+                        $question = Question::with('type')->findOrFail($question);
+                    }
                 } catch (ModelNotFoundException $e) {
                     throw new QuestionNotFoundException('Question not found with the given ID.');
                 }
             } else {
                 try {
-                    $question = Question::whereSlug($question)->with('type')->firstOrFail();
+                    if($withTrashed) {
+                        $question = Question::withTrashed()->whereSlug($question)->with('type')->firstOrFail();
+                    } else {
+                        $question = Question::whereSlug($question)->with('type')->firstOrFail();
+                    }
                 } catch (ModelNotFoundException $e) {
                     throw new QuestionNotFoundException('Question not found with the given slug.');
                 }
