@@ -58,7 +58,9 @@ class Question extends Model
      * @var array
      */
     protected $appends = [
-        'order'
+        'order',
+        'format',
+        'allows_multiple_choice_other'
     ];
 
     /**
@@ -118,13 +120,28 @@ class Question extends Model
     }
 
     /**
+     * Restores Question and Answers with matching "deleted_at" timestamps.
+     */
+    public function restore()
+    {
+        $deleted_at = $this->deleted_at;
+        $this->answers()->withTrashed()->get()->filter(function ($answer) use ($deleted_at) {
+            $first = $second = $deleted_at;
+            return $answer->deleted_at->gte($first) && $answer->deleted_at->lte($second->addSecond());
+        })->each(function ($answer) {
+            $answer->restore();
+        });
+        parent::restore();
+    }
+
+    /**
      * Accessor for attribute.
      *
      * @return bool
      */
-    public function allowsMultipleChoiceOther()
+    public function getAllowsMultipleChoiceOtherAttribute()
     {
-        return isset($this->options['allows_multiple_choice_other']) ? true : false;
+        return isset($this->options['allows_multiple_choice_other']) ? $this->options['allows_multiple_choice_other'] : false;
     }
 
     /**
@@ -202,8 +219,7 @@ class Question extends Model
      */
     public function setAllowsMultipleChoiceOtherOption()
     {
-        $this->setOption('allows_multiple_choice_other', true);
-        return $this;
+        return $this->setOption('allows_multiple_choice_other', true);
     }
 
     /**
@@ -217,26 +233,45 @@ class Question extends Model
     }
 
     /**
+     * Accessor for attribute.
+     *
+     * @return int
+     */
+    public function getFormatAttribute()
+    {
+        return isset($this->options['format']) ? $this->options['format'] : null;
+    }
+
+    /**
      * Resolves Question object regardless of given identifier.
      *
      * @param $question
+     * @param bool $withTrashed
      * @return \Illuminate\Database\Eloquent\Collection|Model|null
      * @throws QuestionNotFoundException
      */
-    public static function resolveSelf($question)
+    public static function resolveSelf($question, $withTrashed = false)
     {
         if(is_null($question)) { return null; }
 
         if(!$question instanceof Question) {
             if(is_numeric($question)) {
                 try {
-                    $question = Question::with('type')->findOrFail($question);
+                    if($withTrashed) {
+                        $question = Question::withTrashed()->with('type')->findOrFail($question);
+                    } else {
+                        $question = Question::with('type')->findOrFail($question);
+                    }
                 } catch (ModelNotFoundException $e) {
                     throw new QuestionNotFoundException('Question not found with the given ID.');
                 }
             } else {
                 try {
-                    $question = Question::whereSlug($question)->with('type')->firstOrFail();
+                    if($withTrashed) {
+                        $question = Question::withTrashed()->whereSlug($question)->with('type')->firstOrFail();
+                    } else {
+                        $question = Question::whereSlug($question)->with('type')->firstOrFail();
+                    }
                 } catch (ModelNotFoundException $e) {
                     throw new QuestionNotFoundException('Question not found with the given slug.');
                 }

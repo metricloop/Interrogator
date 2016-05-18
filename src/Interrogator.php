@@ -39,6 +39,7 @@ class Interrogator
     public function copySection($section, $targetClass)
     {
         $section = Section::resolveSelf($section);
+
         $newSection = $this->createSection($section->name, $section->options, $targetClass, $section->team_id);
         $section->groups->each(function($group) use ($newSection) {
             $this->copyGroup($group, $newSection);
@@ -125,8 +126,18 @@ class Interrogator
      */
     public function deleteSection($section)
     {
-        $section = Section::resolveSelf($section);
-        Section::destroy($section->id);
+        Section::resolveSelf($section)->delete();
+    }
+
+    /**
+     * Restores a particular Section.
+     *
+     * @param $section
+     * @throws SectionNotFoundException
+     */
+    public function restoreSection($section)
+    {
+        return Section::resolveSelf($section, $withTrashed = true)->restore();
     }
 
     /**
@@ -227,7 +238,7 @@ class Interrogator
     }
 
     /**
-     * Updates the given section.
+     * Deletes the given group.
      *
      * @param $group
      * @return mixed
@@ -236,6 +247,18 @@ class Interrogator
     public function deleteGroup($group)
     {
         Group::resolveSelf($group)->delete();
+    }
+
+    /**
+     * Restores a particular Group.
+     *
+     * @param $group
+     * @return mixed
+     * @throws Exceptions\GroupNotFoundException
+     */
+    public function restoreGroup($group)
+    {
+        return Group::resolveSelf($group, $withTrashed = true)->restore();
     }
 
     /**
@@ -457,24 +480,37 @@ class Interrogator
     }
 
     /**
+     * Restores a particular Question.
+     *
+     * @param $question
+     * @return mixed
+     * @throws Exceptions\QuestionNotFoundException
+     */
+    public function restoreQuestion($question)
+    {
+        return Question::resolveSelf($question, $withTrashed = true)->restore();
+    }
+
+    /**
      * Search for term.
      *
      * @param $term
      * @param null $class_name
      * @param null $question_ids
+     * @param null $team_id
      * @return mixed
      */
     public function searchExact($term, $class_name = null, $question_ids = null, $team_id = null)
     {
-        $query = Answer::where('value', $term)
-            ->where('team_id', $team_id);
-        if($class_name) {
-            $query = $query->where('answerable_type', $class_name);
-        }
-        if($question_ids) {
-            $query = $query->whereIn('question_id', $question_ids);
-        }
-        return $query->get();
+        return Answer::where('value', $term)
+            ->where('team_id', $team_id)
+            ->when($class_name, function($query) use ($class_name) {
+                return $query->where('answerable_type', $class_name);
+            })
+            ->when($question_ids, function($query) use ($question_ids) {
+                return $query->whereIn('question_id', $question_ids);
+            })
+            ->get();
     }
 
     /**
@@ -488,28 +524,41 @@ class Interrogator
      */
     public function search($term, $class_name = null, $question_ids = [], $team_id = null)
     {
-        $term = '%' . $term . '%';
-
-        $query = Answer::where('value', 'LIKE', $this->wildcardReplace($term))
-            ->where('team_id', $team_id);
-        if($class_name) {
-            $query = $query->where('answerable_type', $class_name);
-        }
-        if($question_ids) {
-            $query = $query->whereIn('question_id', $question_ids);
-        }
-        return $query->get();
+        return Answer::where('value', 'LIKE', $this->wildcardReplace($term, $pad = true))
+            ->where('team_id', $team_id)
+            ->when($class_name, function($query) use ($class_name) {
+                return $query->where('answerable_type', $class_name);
+            })
+            ->when($question_ids, function($query) use ($question_ids) {
+                return $query->whereIn('question_id', $question_ids);
+            })
+            ->get();
     }
 
     /**
      * Replaces user-friendly wildcards with SQL-specific wildcards.
      *
      * @param $term
+     * @param bool $pad
      * @return mixed
      */
-    private function wildcardReplace($term)
+    private function wildcardReplace($term, $pad = false)
     {
+        if($pad) {
+            $term = $this->padSearchTerm($term);
+        }
         return str_replace(['*', '?'], ['%', '_'], $term);
+    }
+
+    /**
+     * Pads search term with wildcards.
+     *
+     * @param $term
+     * @return string
+     */
+    private function padSearchTerm($term)
+    {
+        return '%' . $term . '%';
     }
 
     /**
