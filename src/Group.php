@@ -105,6 +105,22 @@ class Group extends Model
     }
 
     /**
+     * Restores Group and Questions with matching "deleted_at" timestamps.
+     */
+    public function restore()
+    {
+        $deleted_at = $this->deleted_at;
+
+        $this->questions()->withTrashed()->get()->filter(function ($question) use ($deleted_at) {
+            $first = $second = $deleted_at;
+            return $question->deleted_at->gte($first) && $question->deleted_at->lte($second->addSecond());
+        })->each(function ($question) {
+            $question->restore();
+        });
+        parent::restore();
+    }
+
+    /**
      * Set an Option (brand new or updating existing).
      *
      * @param $key
@@ -169,23 +185,32 @@ class Group extends Model
      * Resolves Group object regardless of given identifier.
      *
      * @param $group
+     * @param bool $withTrashed
      * @return null
      * @throws GroupNotFoundException
      */
-    public static function resolveSelf($group)
+    public static function resolveSelf($group, $withTrashed = false)
     {
         if(is_null($group)) { return null; }
 
         if(!$group instanceof Group) {
             if(is_numeric($group)) {
                 try {
-                    $group = Group::findOrFail($group);
+                    if($withTrashed) {
+                        $group = Group::withTrashed()->findOrFail($group);
+                    } else {
+                        $group = Group::findOrFail($group);
+                    }
                 } catch (ModelNotFoundException $e) {
                     throw new GroupNotFoundException('Group not found with the given ID.');
                 }
             } else {
                 try {
-                    $group = Group::whereSlug($group)->firstOrFail();
+                    if($withTrashed) {
+                        $group = Group::withTrashed()->whereSlug($group)->firstOrFail();
+                    } else {
+                        $group = Group::whereSlug($group)->firstOrFail();
+                    }
                 } catch (ModelNotFoundException $e) {
                     throw new GroupNotFoundException('Group not found with the given slug.');
                 }

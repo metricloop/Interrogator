@@ -924,6 +924,48 @@ class InterrogatorTest extends PHPUnit_Framework_TestCase
         $interrogator = new Interrogator();
         $interrogator->getQuestion('foo');
     }
+
+    public function test_can_restore_deleted_section()
+    {
+        $interrogator = new Interrogator();
+        $this->createTestQuestion($interrogator);
+        $interrogator->deleteSection(1);
+        $this->assertTrue(Section::withTrashed()->first()->trashed());
+        $this->assertTrue(Group::withTrashed()->first()->trashed());
+        $this->assertTrue(Question::withTrashed()->first()->trashed());
+        $interrogator->restoreSection(1);
+        $this->assertFalse(Section::first()->trashed());
+        $this->assertFalse(Group::first()->trashed());
+        $this->assertFalse(Question::first()->trashed());
+    }
+
+    public function test_can_restore_deleted_group()
+    {
+        $interrogator = new Interrogator();
+        $this->createTestQuestion($interrogator);
+        $interrogator->deleteGroup(1);
+        $this->assertFalse(Section::first()->trashed());
+        $this->assertTrue(Group::withTrashed()->first()->trashed());
+        $this->assertTrue(Question::withTrashed()->first()->trashed());
+        $interrogator->restoreGroup(1);
+        $this->assertFalse(Section::first()->trashed());
+        $this->assertFalse(Group::first()->trashed());
+        $this->assertFalse(Question::first()->trashed());
+    }
+
+    public function test_can_restore_deleted_question()
+    {
+        $interrogator = new Interrogator();
+        $this->createTestQuestion($interrogator);
+        $interrogator->deleteQuestion(1);
+        $this->assertFalse(Section::first()->trashed());
+        $this->assertFalse(Group::first()->trashed());
+        $this->assertTrue(Question::withTrashed()->first()->trashed());
+        $interrogator->restoreQuestion(1);
+        $this->assertFalse(Section::first()->trashed());
+        $this->assertFalse(Group::first()->trashed());
+        $this->assertFalse(Question::first()->trashed());
+    }
     
 }
 

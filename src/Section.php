@@ -94,6 +94,21 @@ class Section extends Model
     }
 
     /**
+     * Restores Section and Groups with matching "deleted_at" timestamps.
+     */
+    public function restore()
+    {
+        $deleted_at = $this->deleted_at;
+        $this->groups()->withTrashed()->get()->filter(function ($group) use ($deleted_at) {
+            $first = $second = $deleted_at;
+            return $group->deleted_at->gte($first) && $group->deleted_at->lte($second->addSecond());
+        })->each(function ($group) {
+            $group->restore();
+        });
+        parent::restore();
+    }
+
+    /**
      * Set an Option (brand new or updating existing).
      *
      * @param $key
@@ -158,23 +173,32 @@ class Section extends Model
      * Resolves Section object regardless of given identifier.
      *
      * @param $section
+     * @param bool $withTrashed
      * @return null
      * @throws SectionNotFoundException
      */
-    public static function resolveSelf($section)
+    public static function resolveSelf($section, $withTrashed = false)
     {
         if(is_null($section)) { return null; }
 
         if(!$section instanceof Section) {
             if(is_numeric($section)) {
                 try {
-                    $section = Section::findOrFail($section);
+                    if($withTrashed) {
+                        $section = Section::withTrashed()->findOrFail($section);
+                    } else {
+                        $section = Section::findOrFail($section);
+                    }
                 } catch (ModelNotFoundException $e) {
                     throw new SectionNotFoundException('Section not found with the given ID.');
                 }
             } else {
                 try {
-                    $section = Section::whereSlug($section)->firstOrFail();
+                    if($withTrashed) {
+                        $section = Section::withTrashed()->whereSlug($section)->firstOrFail();
+                    } else {
+                        $section = Section::whereSlug($section)->firstOrFail();
+                    }
                 } catch (ModelNotFoundException $e) {
                     throw new SectionNotFoundException('Section not found with the given slug.');
                 }
