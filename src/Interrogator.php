@@ -39,7 +39,8 @@ class Interrogator
     public function copySection($section, $targetClass)
     {
         $section = Section::resolveSelf($section);
-        $newSection = $this->createSection($section->name, [], $targetClass);
+
+        $newSection = $this->createSection($section->name, $section->options, $targetClass, $section->team_id);
         $section->groups->each(function($group) use ($newSection) {
             $this->copyGroup($group, $newSection);
         });
@@ -175,7 +176,7 @@ class Interrogator
     public function copyGroup($group, $targetSection)
     {
         $group = Group::resolveSelf($group);
-        $newGroup = $this->createGroup($group->name, $targetSection, $group->options);
+        $newGroup = $this->createGroup($group->name, $targetSection, $group->options, $group->team_id);
         $group->questions->each(function ($question) use ($newGroup) {
             $this->copyQuestion($question, $newGroup);
         });
@@ -297,9 +298,12 @@ class Interrogator
      * @param null $name
      * @param null $group
      * @param array $options
+     * @param array $choices
      * @return mixed
+     * @throws Exceptions\GroupNotFoundException
+     * @throws Exceptions\QuestionNotFoundException
      */
-    public function updateQuestion($question, $name = null, $group = null, $options = [])
+    public function updateQuestion($question, $name = null, $group = null, $options = [], $choices = [])
     {
         $question = Question::resolveSelf($question);
         $group = Group::resolveSelf($group);
@@ -314,6 +318,9 @@ class Interrogator
         }
         $question->update($attributes);
         $question = $question->syncOptions($options);
+        if($choices) {
+            $question = $question->addMultipleChoiceOption($choices);
+        }
 
         return $question;
     }
@@ -328,7 +335,7 @@ class Interrogator
     public function copyQuestion($question, $targetGroup)
     {
         $question = Question::resolveSelf($question);
-        return $this->createQuestion($question->name, $question->question_type_id, $targetGroup, $question->options, $question->choices);
+        return $this->createQuestion($question->name, $question->question_type_id, $targetGroup, $question->options, $question->choices, $question->team_id);
     }
 
     /**
@@ -353,6 +360,10 @@ class Interrogator
      */
     public function unsetOptionOnQuestion($question, $key)
     {
+        if($key == 'allows_multiple_choice_other') {
+            // Do nothing.
+            return Question::resolveSelf($question);
+        }
         return Question::resolveSelf($question)->unsetOption($key);
     }
 
